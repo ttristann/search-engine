@@ -13,7 +13,7 @@ Conditions to be considered as a token:
 
 class Tokenizer:
     def __init__(self):
-        self.stop_words = [
+        self.stop_words = {
             'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 
             'are', "aren't", 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 
             'between', 'both', 'but', 'by', "can't", 'cannot', 'could', "couldn't", 'did', "didn't", 
@@ -31,7 +31,7 @@ class Tokenizer:
             "weren't", 'what', "what's", 'when', "when's", 'where', "where's", 'which', 'while', 'who', 
             "who's", 'whom', 'why', "why's", 'with', "won't", 'would', "wouldn't", 'you', "you'd", 
             "you'll", "you're", "you've", 'your', 'yours', 'yourself', 'yourselves'                    
-        ]
+        }
         self.tokens = defaultdict(int)
 
     def tokenize(self, main_text):
@@ -48,9 +48,21 @@ class Tokenizer:
             else:
                 if current_token and len(current_token) >= 3:
                     combined = ''.join(current_token)
+                    # if "Institutions" in combined:
+                    #     print(f"This is the wordddd:      {combined}\n\n\n\n")
+                    print(f"this is the word: {combined}")
                     if combined not in self.stop_words:
                          yield combined
-                    current_token = [] # resets it to make a new token
+                current_token = [] # resets it to make a new token
+            
+            # for char in stringDoc:
+            #     # we will check via ascii number. If it is a (number or char): (then keep), else: (ignore)
+            #     if((65 <= ord(char) <= 90) or (97<=ord(char)<=122) or (48<=ord(char)<=57)):
+            #         word += char.lower()
+
+            #     elif word != "": # ensures we are not adding an empty string to the tokens list
+            #         tokens.append(word)
+            #         word = ""
 
         if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
             combined = ''.join(current_token)

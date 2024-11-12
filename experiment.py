@@ -4,6 +4,7 @@ import re
 from collections import defaultdict
 from bs4 import BeautifulSoup, Comment
 from tokenizer import Tokenizer
+from pathlib import Path
 
 
 """
@@ -33,9 +34,13 @@ def getting_content(folder_path):
             if file.endswith(".json") and count <= 2:
                 json_path = os.path.join(root, file)
                 with open(json_path, 'r') as current_file:
+
                     data = json.load(current_file)
+                    print(f"this is the file: {current_file}")
                     # using beautiful soup to parse the content
+                    print(data.get("url"))
                     html_content = data.get("content")
+
                     soup_obj = BeautifulSoup(html_content, "lxml")
 
                     for comment in soup_obj.find_all(text = lambda text: isinstance(text, Comment)):
@@ -44,10 +49,14 @@ def getting_content(folder_path):
                     # removes all <script> and <style> tags
                     for tag_element in soup_obj.find_all(['script', 'style']):  
                         tag_element.extract()
+                    if(soup_obj.find('title')):
+                        soup_obj.find('title').decompose() #remove title header, makes word count more accurate
+                    # remove title from text data, analyze code. Many words are being mashed together. Axel
                     
                     # gets the actual text inside the HTML file
                     raw_text = soup_obj.get_text(separator=" ", strip=True)
                     main_text = re.sub(r"[^A-Za-z0-9\s]+", "", raw_text)
+                    print(f"this is the main text: {main_text}")
 
                     # calls tokenizes and normalizes the words within the main text
                     current_tokenizer = Tokenizer()
@@ -69,8 +78,17 @@ def getting_content(folder_path):
 if __name__ == "__main__":
     
 
-    folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
+    # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
+    folder_path = Path('ANALYST_2')
+
+    # if os.path.exists(folder_path):
+    #     print("exists")
+    # else:
+    #     print("does not exist")
+
+
     main_index = getting_content(folder_path)
+
     
     # Specify the output file path
     output_file_path = "filtered_output.txt"
