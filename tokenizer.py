@@ -50,7 +50,7 @@ class Tokenizer:
                     combined = ''.join(current_token)
                     # if "Institutions" in combined:
                     #     print(f"This is the wordddd:      {combined}\n\n\n\n")
-                    print(f"this is the word: {combined}")
+                    # print(f"this is the word: {combined}")
                     if combined not in self.stop_words:
                          yield combined
                 current_token = [] # resets it to make a new token
