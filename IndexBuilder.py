@@ -117,6 +117,7 @@ def build_index(folder_path):
                 main_index[token].append(current_entry)
 
             batchCount += 1
+            docId += 1
         # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
         if batchCount % batchSize == 0:
             # Sort and Write the current batch to disk
