@@ -13,5 +13,6 @@
 ## Run inverted index builder
 1. Navigate to ```IndexBuilder.py```
 2. Run the file either...
-    2.1 On your IDE (hitting the ```run``` button or similar)
-    2.2 On your terminal, bash, etc. ```python InvertedIndexBuilder.py```
+    - On your IDE (hitting the ```run``` button or similar)
+    - On your terminal, bash, etc. 
+    ```python InvertedIndexBuilder.py```
