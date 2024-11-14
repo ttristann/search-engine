@@ -1,14 +1,37 @@
 import os
 import json
 import re
+import warnings # having an XMLParseAsHTMLWarning, using to catch it and identify XML file(s)
 from collections import defaultdict
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning # type: ignore
 from tokenizer import Tokenizer
 from pathlib import Path
-import nltk; nltk.download('popular')
+import nltk # type: ignore
+# nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 import time
 
+def write_to_disk(main_index, output_file_path):
+    """
+    Writes the main index to the output file
+    """
+    with open(output_file_path, 'w') as output_file:
+        json.dump(main_index, output_file, indent=2) # main index data is written to the output file in JSON format, easier for parsing later
+        # NOTE: will need to use json.load() to read the data back in later 
+    print("\n-----------------------------------------------------")
+    print(f"Output successfully written to {output_file_path}")
+    print("-----------------------------------------------------")
 
+
+def sort_index(main_index):
+    """
+    Sorts the main index by 
+        - frequency of the words (primary)
+        - the docID (secondary)
+    """
+    # NOTE: x[1][1] is word frequency, x[1][0] is docID, '-' implies DESC order (highest first)
+    sorted_index = {word: sorted(entries, key=lambda x: (-x[1], x[0])) 
+                    for word, entries in main_index.items()}
+    return sorted_index
 """
 This is file is just to experiment on how to access directories inside the DEV directory
 and iterate through all the folders and json files
@@ -26,29 +49,47 @@ def build_index(folder_path):
             'word2': [('url1', freq3), ('url3', freq4)],
             ...
         }
+
+    Curently changing content format to:
+        inverted_index = {
+            'word1': [(docId : int, freq1 : int), (docId, freq2)],
+            'word2': [(docId, freq3), (docId, freq4)],
+            ...
+        }
     """
-    count = 0 # limiter? We get rid of this for actual implementation right?
-    # the data structure to collect the content
-    main_index = defaultdict(list)
-    docId = 0
-    doc_batch = []
-    
+
+    main_index = defaultdict(list) # Our main inverted index
+    docId = 1 # unique identifier for each document, incremented by 1 for each file
+    batchSize = 500 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
+    batchCount = 0 # current batch count
+    skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
     # iterating through the directory/folder that contains all of the JSON files
-    for json_file in Path(folder_path).rglob('*.json'):
-        if count == 3:
-            break
-
+    for json_file in Path(folder_path).rglob('*.json'): 
         with open(json_file, 'r') as current_file:
+            data = json.load(current_file) # loads the json file
+            if skip:
+                # Double checking to make sure we skipped the xml file from previous iteration
+                skip = False
+                print(f"SKIPPED previous, Now parsing: {data.get("url")} IN {json_file}")
 
-            data = json.load(current_file)
-            print(f"this is the file: {current_file}")
+            # print(f"this is the file: {current_file}")
+            # print(data.get("url"))
+
             # using beautiful soup to parse the content
-            print(data.get("url"))
             html_content = data.get("content")
+            with warnings.catch_warnings(record=True) as w: # catch the warning
+                warnings.simplefilter("always", XMLParsedAsHTMLWarning)
+                soup_obj = BeautifulSoup(html_content, "lxml")
 
-            soup_obj = BeautifulSoup(html_content, "lxml")
+                if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
+                    print(f"\nXMLParsedAsHTMLWarning \n\t\t FOR: {data.get("url")}")
+                    print(f"\t\t IN {json_file}")
+                    skip = True
+            if skip:
+                print(f"\t\t Skipping {data.get("url")}")
+                continue
 
-            for comment in soup_obj.find_all(text = lambda text: isinstance(text, Comment)):
+            for comment in soup_obj.find_all(string = lambda string: isinstance(string, Comment)):
                 comment.extract()
 
             # removes all <script> and <style> tags
@@ -61,7 +102,7 @@ def build_index(folder_path):
             # gets the actual text inside the HTML file
             raw_text = soup_obj.get_text(separator=" ", strip=True)
             main_text = re.sub(r"[^A-Za-z0-9\s]+", "", raw_text)
-            print(f"this is the main text: {main_text}")
+            # print(f"this is the main text: {main_text}")
 
             # calls tokenizes and normalizes the words within the main text
             current_tokenizer = Tokenizer()
@@ -72,17 +113,26 @@ def build_index(folder_path):
             # creates the posting for the inverted index entries 
             # for the words present in the current file
             for token, frequency in ordered_tokens.items():
-                current_entry = (data["url"], frequency)
+                current_entry = (docId, frequency) # TENZIN NOTE: might not need to add frequency but let's keep for now
                 main_index[token].append(current_entry)
 
-            count += 1
+            batchCount += 1
+        # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
+        if batchCount % batchSize == 0:
+            # Sort and Write the current batch to disk
+            main_index = sort_index(main_index)
+            write_to_disk(main_index, f"Output_Batch_{batchCount}.txt") # e.g Output_Batch_100.txt = 1st batch, Output_Batch_200.txt = 2nd batch, etc.
+            main_index = defaultdict(list) # reset the main index
 
+    if main_index:
+        # Sort and Write remaining files to disk if any (Catch the stragglers)
+        main_index = sort_index(main_index)
+        write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
+        main_index = defaultdict(list) # reset the main index just cuz
     return main_index
 
 
 if __name__ == "__main__":
-    
-
     # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
     folder_path = Path('analyst/ANALYST')
 
@@ -99,11 +149,11 @@ if __name__ == "__main__":
     print(f"Finished process in: {time_end - time_start} seconds...")
     
     # Specify the output file path
-    output_file_path = "filtered_output.txt"
+    # output_file_path = "filtered_output.txt"
     
     # Write the results to the output file
-    with open(output_file_path, 'w') as output_file:
-        for key, value in main_index.items():
-            output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
+    # with open(output_file_path, 'w') as output_file:
+    #     for key, value in main_index.items():
+    #         output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
     
-    print(f"Output written to {output_file_path}")
+    # print(f"Output written to {output_file_path}")
