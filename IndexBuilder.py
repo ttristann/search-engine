@@ -1,14 +1,17 @@
 import os
 import json
 import re
+import time
 import warnings # having an XMLParseAsHTMLWarning, using to catch it and identify XML file(s)
+import nltk
+
 from collections import defaultdict
-from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning # type: ignore
+from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
-import nltk # type: ignore
+from nltk.stem import SnowballStemmer
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
-import time
+
 
 def write_to_disk(main_index, output_file_path):
     """
@@ -29,7 +32,7 @@ def sort_index(main_index):
         - the docID (secondary)
     """
     # NOTE: x[1][1] is word frequency, x[1][0] is docID, '-' implies DESC order (highest first)
-    sorted_index = {word: sorted(entries, key=lambda x: (-x[1], x[0])) 
+    sorted_index = {word: sorted(entries, key=lambda x: (-x[1], -x[0])) 
                     for word, entries in main_index.items()}
     return sorted_index
 """
@@ -63,6 +66,7 @@ def build_index(folder_path):
     batchSize = 500 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
     batchCount = 0 # current batch count
     skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
+
     # iterating through the directory/folder that contains all of the JSON files
     for json_file in Path(folder_path).rglob('*.json'): 
         with open(json_file, 'r') as current_file:
@@ -82,11 +86,11 @@ def build_index(folder_path):
                 soup_obj = BeautifulSoup(html_content, "lxml")
 
                 if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
-                    print(f"\nXMLParsedAsHTMLWarning \n\t\t FOR: {data.get("url")}")
-                    print(f"\t\t IN {json_file}")
+                    print(f"\nXMLParsedAsHTMLWarning \n\t FOR: {data.get("url")}")
+                    print(f"\t IN {json_file}")
                     skip = True
             if skip:
-                print(f"\t\t Skipping {data.get("url")}")
+                print(f"\t Skipping {data.get("url")}")
                 continue
 
             for comment in soup_obj.find_all(string = lambda string: isinstance(string, Comment)):
@@ -113,17 +117,21 @@ def build_index(folder_path):
             # creates the posting for the inverted index entries 
             # for the words present in the current file
             for token, frequency in ordered_tokens.items():
+                stemmed_token = SnowballStemmer("english").stem(token) # stemming the token
                 current_entry = (docId, frequency) # TENZIN NOTE: might not need to add frequency but let's keep for now
-                main_index[token].append(current_entry)
+                main_index[stemmed_token].append(current_entry)
 
             batchCount += 1
             docId += 1
+        
         # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
         if batchCount % batchSize == 0:
             # Sort and Write the current batch to disk
             main_index = sort_index(main_index)
             write_to_disk(main_index, f"Output_Batch_{batchCount}.txt") # e.g Output_Batch_100.txt = 1st batch, Output_Batch_200.txt = 2nd batch, etc.
             main_index = defaultdict(list) # reset the main index
+
+
 
     if main_index:
         # Sort and Write remaining files to disk if any (Catch the stragglers)
