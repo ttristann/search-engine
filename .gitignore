@@ -4,4 +4,5 @@ developer/
 analyst/
 __pycache__/
 
-# Files to Ignore
+# Ignore batch output files
+Output_batch_*.txt 
