@@ -4,6 +4,7 @@ import re
 import time
 import warnings # having an XMLParseAsHTMLWarning, using to catch it and identify XML file(s)
 import nltk
+import threading
 
 from collections import defaultdict
 from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
@@ -60,7 +61,7 @@ def build_index(folder_path):
             ...
         }
     """
-
+    threads = [] # list of all started threads
     main_index = defaultdict(list) # Our main inverted index
     docId = 1 # unique identifier for each document, incremented by 1 for each file
     batchSize = 500 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
@@ -128,7 +129,10 @@ def build_index(folder_path):
         if batchCount % batchSize == 0:
             # Sort and Write the current batch to disk
             main_index = sort_index(main_index)
-            write_to_disk(main_index, f"Output_Batch_{batchCount}.txt") # e.g Output_Batch_100.txt = 1st batch, Output_Batch_200.txt = 2nd batch, etc.
+            writer_thread = threading.Thread(target=write_to_disk, args=(main_index, f"Output_Batch_{batchCount}.txt"))
+            # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt") # e.g Output_Batch_100.txt = 1st batch, Output_Batch_200.txt = 2nd batch, etc.
+            writer_thread.start()
+            threads.append(writer_thread)
             main_index = defaultdict(list) # reset the main index
 
 
@@ -136,8 +140,16 @@ def build_index(folder_path):
     if main_index:
         # Sort and Write remaining files to disk if any (Catch the stragglers)
         main_index = sort_index(main_index)
-        write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
+        writer_thread = threading.Thread(target=write_to_disk, args=(main_index, f"Output_batch_{batchCount}.txt"))
+        writer_thread.start()
+        threads.append(writer_thread)
+        # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         main_index = defaultdict(list) # reset the main index just cuz
+    
+    for thread in threads:
+        print(f"Thread: {thread.name} is alive: {thread.is_alive()}, JOINING")
+        thread.join()
+
     return main_index
 
 
