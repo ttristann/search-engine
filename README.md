@@ -1,12 +1,10 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- try to iterate through the whole dev file to see how much space and time efficient the sample code is
-- as new entries are added onto the index, keep sorting them based on the frequency in descending order
-- Check and Remove Duplicate tokens
+- Make it more efficient, try out multi-processing instead of multi-threading - current standing 110 min/500 mb
+- Check and Remove Duplicate url with the same content (use simhash for next milestone)
 - Need to merge output batch files into one file, can make a separate class to do so
-- Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
-- Also possibly implement threading and/or multiprocessing to speed up index
+- Try to import project to openlab to check the if program is more efficient there compared to local devices
 
 ## Setup
 1. Clone repository ```git clone https://github.com/ttristann/search-engine.git```
