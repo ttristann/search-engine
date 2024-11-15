@@ -64,7 +64,7 @@ def build_index(folder_path):
     threads = [] # list of all started threads
     main_index = defaultdict(list) # Our main inverted index
     docId = 1 # unique identifier for each document, incremented by 1 for each file
-    batchSize = 500 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
+    batchSize = 1000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
     batchCount = 0 # current batch count
     skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
 
@@ -155,7 +155,7 @@ def build_index(folder_path):
 
 if __name__ == "__main__":
     # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
-    folder_path = Path('analyst/ANALYST')
+    folder_path = Path('DEV')
 
     # if os.path.exists(folder_path):
     #     print("exists")
