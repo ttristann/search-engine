@@ -106,7 +106,7 @@ def build_index(folder_path):
             
             # gets the actual text inside the HTML file
             raw_text = soup_obj.get_text(separator=" ", strip=True)
-            main_text = re.sub(r"[^A-Za-z0-9\s]+", "", raw_text)
+            main_text = " ".join(re.findall(r'[a-zA-Z0-9]+', raw_text))
             # print(f"this is the main text: {main_text}")
 
             # calls tokenizes and normalizes the words within the main text
@@ -154,27 +154,15 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
     folder_path = Path('DEV')
 
-    # if os.path.exists(folder_path):
-    #     print("exists")
-    # else:
-    #     print("does not exist")
-
+    # to keep track how long the program runs for
     time_start = time.time()
+
     # Get the content from the folder
     main_index = build_index(folder_path)
+
     time_end = time.time()
 
     print(f"Finished process in: {time_end - time_start} seconds...")
     
-    # Specify the output file path
-    # output_file_path = "filtered_output.txt"
-    
-    # Write the results to the output file
-    # with open(output_file_path, 'w') as output_file:
-    #     for key, value in main_index.items():
-    #         output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
-    
-    # print(f"Output written to {output_file_path}")
