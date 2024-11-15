@@ -1,6 +1,7 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
+- MAIN PROIRITY - MAKE SCRIPTS TO MAKE THE REPORT
 - Make it more efficient, try out multi-processing instead of multi-threading - current standing 110 min/500 mb
 - Check and Remove Duplicate url with the same content (use simhash for next milestone)
 - Need to merge output batch files into one file, can make a separate class to do so
