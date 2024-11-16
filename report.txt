@@ -1,3 +1,5 @@
+Student IDs: 94184591 (Tenzin Tsundue), 89886378 (Axel Dejesus), 43047345 (Tristan Galang)
+----------------------------------------
 Unique Tokens: 1061906
 ----------------------------------------
 Total Indexed Documents: 53984
