@@ -146,7 +146,6 @@ def build_index(folder_path):
                 tasks_per_batch.append(task) # add task to the current batch
 
                 docId += 1
-                total_files += 1
 
                 # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
                 if len(tasks_per_batch) % batchSize == 0:
@@ -186,7 +185,7 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = Path('analyst/ANALYST')
+    # folder_path = Path('analyst/ANALYST')
     folder_path = Path('developer/DEV')
     total_files = 0 # total number of files in the directory
 
@@ -196,7 +195,6 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer
 
     print(f"Finished process in: {time_end - time_start} seconds...")
-    print(f"Total number of files processed: {total_files}")
     
     # Specify the output file path
     # output_file_path = "filtered_output.txt"
