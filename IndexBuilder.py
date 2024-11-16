@@ -89,9 +89,9 @@ def build_index(folder_path):
     docId = 1 # unique identifier for each document, incremented by 1 for each file
     batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
     skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
-    batchCount = 1 # counter to keep track of the batch number
+    batchCount = 0 # counter to keep track of the batch number
     writer_thread_queue = queue.Queue() # Queue to store all started threads
-    
+
     # Creating a single writer thread to write to disk
     writer_thread = threading.Thread(target=writer_thread_worker, args=(writer_thread_queue,), daemon=True)
     writer_thread.start()
@@ -138,7 +138,7 @@ def build_index(folder_path):
                 
                 # gets the actual text inside the HTML file
                 raw_text = soup_obj.get_text(separator=" ", strip=True)
-                main_text = re.sub(r"[^A-Za-z0-9\s]+", "", raw_text)
+                main_text = " ".join(re.findall(r'[a-zA-Z0-9]+', raw_text))
                 # print(f"this is the main text: {main_text}")
 
                 # calls the process_file function, tokenizing the file's text and adding it to the main index
@@ -146,7 +146,7 @@ def build_index(folder_path):
                 tasks_per_batch.append(task) # add task to the current batch
 
                 docId += 1
-                batchCount += 1
+                total_files += 1
 
                 # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
                 if len(tasks_per_batch) % batchSize == 0:
@@ -156,10 +156,11 @@ def build_index(folder_path):
                         for word, postings in partial_index.items():
                             main_index[word] += postings
                     
+                    batchCount += 1 # increment the batch count
 
                     # Sort and Write the current batch to disk   
                     main_index = sort_index(main_index)
-                    writer_thread_queue.put((main_index, f"Output_Batch_{math.ceil(float(batchCount) / float(batchSize))}.txt"))
+                    writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
                     
                     main_index = defaultdict(list) # reset the main index
                     tasks_per_batch = [] # reset the tasks list
@@ -171,9 +172,10 @@ def build_index(folder_path):
                 main_index[word].extend(postings)
         
         if main_index:
+            batchCount += 1
             # Sort and Write remaining files to disk if any (Catch the stragglers)
             main_index = sort_index(main_index)
-            writer_thread_queue.put((main_index, f"Output_Batch_{math.ceil(float(batchCount) / float(batchSize))}.txt"))
+            writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
             # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
     
     writer_thread_queue.join()
@@ -186,6 +188,7 @@ def build_index(folder_path):
 if __name__ == "__main__":
     folder_path = Path('analyst/ANALYST')
     folder_path = Path('developer/DEV')
+    total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer
     
@@ -193,6 +196,7 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer
 
     print(f"Finished process in: {time_end - time_start} seconds...")
+    print(f"Total number of files processed: {total_files}")
     
     # Specify the output file path
     # output_file_path = "filtered_output.txt"
