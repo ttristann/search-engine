@@ -1,4 +1,5 @@
 from collections import defaultdict
+from simHashing import Simhashing
 """
 Tokenizer class that takes in a string of text 
 that has been filtered through by Beautiful Soup
@@ -41,6 +42,7 @@ class Tokenizer:
         then checks if the resulting token meets the 
         condition to be a valid one. 
         """
+        final_string = " "
         current_token = []
         for char in main_text:
             if ('A' <= char <='Z') or ('a' <= char <= 'z') or ('0' <= char <= '9'): # checking for alphanumeric value
@@ -52,22 +54,16 @@ class Tokenizer:
                     #     print(f"This is the wordddd:      {combined}\n\n\n\n")
                     # print(f"this is the word: {combined}")
                     if combined not in self.stop_words:
-                         yield combined
+                        final_string = final_string + combined + " "
+                        yield combined
                 current_token = [] # resets it to make a new token
-            
-            # for char in stringDoc:
-            #     # we will check via ascii number. If it is a (number or char): (then keep), else: (ignore)
-            #     if((65 <= ord(char) <= 90) or (97<=ord(char)<=122) or (48<=ord(char)<=57)):
-            #         word += char.lower()
-
-            #     elif word != "": # ensures we are not adding an empty string to the tokens list
-            #         tokens.append(word)
-            #         word = ""
 
         if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
             combined = ''.join(current_token)
             if combined not in self.stop_words:
                 yield combined
+        return final_string
+
 
     def compute_frequencies(self, tokens):
         """

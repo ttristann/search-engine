@@ -11,8 +11,10 @@ from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import SnowballStemmer
+from simHashing import Simhashing
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
+hashTable = Simhashing()
 
 def write_to_disk(main_index, output_file_path):
     """
@@ -75,7 +77,7 @@ def build_index(folder_path):
             if skip:
                 # Double checking to make sure we skipped the xml file from previous iteration
                 skip = False
-                print(f"SKIPPED previous, Now parsing: {data.get("url")} IN {json_file}")
+                print("SKIPPED previous, Now parsing: {} IN {}".format(data.get("url"), json_file))
 
             # print(f"this is the file: {current_file}")
             # print(data.get("url"))
@@ -87,11 +89,11 @@ def build_index(folder_path):
                 soup_obj = BeautifulSoup(html_content, "lxml")
 
                 if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
-                    print(f"\nXMLParsedAsHTMLWarning \n\t FOR: {data.get("url")}")
-                    print(f"\t IN {json_file}")
+                    print("\nXMLParsedAsHTMLWarning \n\t FOR: {}".format(data.get("url")))
+                    print("\t IN {}".format(json_file))
                     skip = True
             if skip:
-                print(f"\t Skipping {data.get("url")}")
+                print("\t Skipping {}".format(data.get("url")))
                 continue
 
             for comment in soup_obj.find_all(string = lambda string: isinstance(string, Comment)):
@@ -107,11 +109,11 @@ def build_index(folder_path):
             # gets the actual text inside the HTML file
             raw_text = soup_obj.get_text(separator=" ", strip=True)
             main_text = re.sub(r"[^A-Za-z0-9\s]+", "", raw_text)
-            # print(f"this is the main text: {main_text}")
 
             # calls tokenizes and normalizes the words within the main text
             current_tokenizer = Tokenizer()
-            tokens_list = current_tokenizer.tokenize(main_text)
+            tokens_list = current_tokenizer.tokenize(main_text) # modified the parameters for this method. for testing: Axel
+            hashTable.computeHash(data.get("url"), tokens_list) # will aquire string and 
             current_tokenizer.compute_frequencies(tokens_list)
             ordered_tokens = current_tokenizer.getTokens()
 
@@ -155,7 +157,7 @@ def build_index(folder_path):
 
 if __name__ == "__main__":
     # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
-    folder_path = Path('analyst/ANALYST')
+    folder_path = Path('ANALYST_2')
 
     # if os.path.exists(folder_path):
     #     print("exists")
