@@ -50,9 +50,6 @@ class Tokenizer:
             else:
                 if current_token and len(current_token) >= 3:
                     combined = ''.join(current_token)
-                    # if "Institutions" in combined:
-                    #     print(f"This is the wordddd:      {combined}\n\n\n\n")
-                    # print(f"this is the word: {combined}")
                     if combined not in self.stop_words:
                         final_string = final_string + combined + " "
                         yield combined

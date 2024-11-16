@@ -113,7 +113,8 @@ def build_index(folder_path):
             # calls tokenizes and normalizes the words within the main text
             current_tokenizer = Tokenizer()
             tokens_list = current_tokenizer.tokenize(main_text) # modified the parameters for this method. for testing: Axel
-            hashTable.computeHash(data.get("url"), tokens_list) # will aquire string and 
+            if not hashTable.computeHash(data.get("url"), tokens_list): # if return false: then we skip this iteration of the loop(similar file found), else: continue to processing text
+                continue
             current_tokenizer.compute_frequencies(tokens_list)
             ordered_tokens = current_tokenizer.getTokens()
 
