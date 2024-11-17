@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import SnowballStemmer
+from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
 
@@ -186,7 +187,7 @@ def build_index(folder_path):
 
 if __name__ == "__main__":
     # folder_path = Path('analyst/ANALYST')
-    folder_path = Path('developer/DEV')
+    folder_path = Path('DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer
@@ -195,6 +196,9 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer
 
     print(f"Finished process in: {time_end - time_start} seconds...")
+
+    report_creation('.')
+
     
     # Specify the output file path
     # output_file_path = "filtered_output.txt"
