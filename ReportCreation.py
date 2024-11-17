@@ -48,6 +48,7 @@ def report_creation(main_directory):
     print(f"unique tokens: {len(unique_tokens)}")
     print(f"unique docID: {len(unique_docID)}")
 
-if __name__ == "__main__":
-    dir_path = "."
-    report_creation(dir_path)
+# if __name__ == "__main__":
+#     dir_path = "."
+#     report_creation(dir_path)
+

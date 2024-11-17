@@ -11,8 +11,11 @@ from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import SnowballStemmer
+from simHashing import Simhashing
+from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
+hashTable = Simhashing()
 
 def write_to_disk(main_index, output_file_path):
     """
@@ -64,7 +67,7 @@ def build_index(folder_path):
     threads = [] # list of all started threads
     main_index = defaultdict(list) # Our main inverted index
     docId = 1 # unique identifier for each document, incremented by 1 for each file
-    batchSize = 1000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
+    batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
     batchCount = 0 # current batch count
     skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
 
@@ -75,7 +78,7 @@ def build_index(folder_path):
             if skip:
                 # Double checking to make sure we skipped the xml file from previous iteration
                 skip = False
-                print(f"SKIPPED previous, Now parsing: {data.get("url")} IN {json_file}")
+                print("SKIPPED previous, Now parsing: {} IN {}".format(data.get("url"), json_file))
 
             # print(f"this is the file: {current_file}")
             # print(data.get("url"))
@@ -87,11 +90,11 @@ def build_index(folder_path):
                 soup_obj = BeautifulSoup(html_content, "lxml")
 
                 if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
-                    print(f"\nXMLParsedAsHTMLWarning \n\t FOR: {data.get("url")}")
-                    print(f"\t IN {json_file}")
+                    print("\nXMLParsedAsHTMLWarning \n\t FOR: {}".format(data.get("url")))
+                    print("\t IN {}".format(json_file))
                     skip = True
             if skip:
-                print(f"\t Skipping {data.get("url")}")
+                print("\t Skipping {}".format(data.get("url")))
                 continue
 
             for comment in soup_obj.find_all(string = lambda string: isinstance(string, Comment)):
@@ -107,11 +110,12 @@ def build_index(folder_path):
             # gets the actual text inside the HTML file
             raw_text = soup_obj.get_text(separator=" ", strip=True)
             main_text = " ".join(re.findall(r'[a-zA-Z0-9]+', raw_text))
-            # print(f"this is the main text: {main_text}")
 
             # calls tokenizes and normalizes the words within the main text
             current_tokenizer = Tokenizer()
-            tokens_list = current_tokenizer.tokenize(main_text)
+            tokens_list = current_tokenizer.tokenize(main_text) # modified the parameters for this method. for testing: Axel
+            if not hashTable.computeHash(data.get("url"), tokens_list): # if return false: then we skip this iteration of the loop(similar file found), else: continue to processing text
+                continue
             current_tokenizer.compute_frequencies(tokens_list)
             ordered_tokens = current_tokenizer.getTokens()
 
@@ -154,15 +158,29 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
+    # folder_path = "/Users/tristangalang/Desktop/ICS/CS121/A3 - Search Engine/DEV"
     folder_path = Path('DEV')
 
-    # to keep track how long the program runs for
-    time_start = time.time()
+    # if os.path.exists(folder_path):
+    #     print("exists")
+    # else:
+    #     print("does not exist")
 
+    time_start = time.time()
     # Get the content from the folder
     main_index = build_index(folder_path)
-
     time_end = time.time()
 
     print(f"Finished process in: {time_end - time_start} seconds...")
+
+    report_creation('.')
     
+    # Specify the output file path
+    # output_file_path = "filtered_output.txt"
+    
+    # Write the results to the output file
+    # with open(output_file_path, 'w') as output_file:
+    #     for key, value in main_index.items():
+    #         output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
+    
+    # print(f"Output written to {output_file_path}")
