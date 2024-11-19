@@ -1,7 +1,7 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- Need to merge output batch files into one file, can make a separate class to do so -- Tristan
+- Need to merge a partial index for the tokens that are part of the search query, rather than the whole index (expensive) -- Tristan
 - Identify important words -- Axel
 - Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
 - Also possibly implement threading and/or multiprocessing to speed up index
