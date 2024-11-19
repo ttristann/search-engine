@@ -186,26 +186,19 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    # folder_path = Path('analyst/ANALYST')
     folder_path = Path('DEV')
     total_files = 0 # total number of files in the directory
 
-    time_start = time.time() # start the timer
-    
+    time_start = time.time() # start the timer for index creation
     main_index = build_index(folder_path) # Get the content from the folder
-    time_end = time.time() # end the timer
+    time_end = time.time() # end the timer for index
 
-    print(f"Finished process in: {time_end - time_start} seconds...")
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
 
+    time_start_2 = time.time() # start the timer for creating report
     report_creation('.')
+    time_end_2 = time.time() # end the timer for creating report
 
-    
-    # Specify the output file path
-    # output_file_path = "filtered_output.txt"
-    
-    # Write the results to the output file
-    # with open(output_file_path, 'w') as output_file:
-    #     for key, value in main_index.items():
-    #         output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
-    
-    # print(f"Output written to {output_file_path}")
+    print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
+
+
