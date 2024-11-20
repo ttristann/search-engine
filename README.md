@@ -1,7 +1,8 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- Need to merge a partial index for the tokens that are part of the search query, rather than the whole index (expensive) -- Tristan
+- Need to merge a smaller index in batches (if needed) -- Tristan
+- Need to sort the smaller index properly, look at the smaller_index.txt to see how it is being currently sorted
 - Identify important words -- Axel
 - Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
 - Also possibly implement threading and/or multiprocessing to speed up index
