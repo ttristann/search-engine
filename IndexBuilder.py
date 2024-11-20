@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import SnowballStemmer
-from simHashing import Simhashing
+from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
 
@@ -186,23 +186,19 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    # folder_path = Path('analyst/ANALYST')
-    folder_path = Path('developer/DEV')
+    folder_path = Path('ANALYST')
     total_files = 0 # total number of files in the directory
 
-    time_start = time.time() # start the timer
-    
+    time_start = time.time() # start the timer for index creation
     main_index = build_index(folder_path) # Get the content from the folder
-    time_end = time.time() # end the timer
+    time_end = time.time() # end the timer for index
 
-    print(f"Finished process in: {time_end - time_start} seconds...")
-    
-    # Specify the output file path
-    # output_file_path = "filtered_output.txt"
-    
-    # Write the results to the output file
-    # with open(output_file_path, 'w') as output_file:
-    #     for key, value in main_index.items():
-    #         output_file.write(f'word -> {key} - \n entries:\n\t{value}\n\n')
-    
-    # print(f"Output written to {output_file_path}")
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+
+    time_start_2 = time.time() # start the timer for creating report
+    report_creation('.')
+    time_end_2 = time.time() # end the timer for creating report
+
+    print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
+
+

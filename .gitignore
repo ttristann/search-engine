@@ -7,3 +7,4 @@ ANALYST_2/
 
 # Ignore batch output files
 Output_batch_*.txt 
+smaller_index.txt

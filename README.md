@@ -1,10 +1,8 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- try to iterate through the whole dev file to see how much space and time efficient the sample code is
-- as new entries are added onto the index, keep sorting them based on the frequency in descending order
-- Check and Remove Duplicate tokens
-- Need to merge output batch files into one file, can make a separate class to do so -- Tristan
+- Need to merge a smaller index in batches (if needed) -- Tristan
+- Need to sort the smaller index properly, look at the smaller_index.txt to see how it is being currently sorted
 - Identify important words -- Axel
 - Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
 - Also possibly implement threading and/or multiprocessing to speed up index
