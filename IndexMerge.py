@@ -61,18 +61,20 @@ class IndexMerge:
                     except json.JSONDecodeError as e:
                         print(f"The error {e} has occured when processing {file}")
 
+        ### testing purposes
         with open("smaller_index.txt", "w") as smaller_index:
             smaller_index.flush()
             smaller_index.write(f"Main tokens: {list(self.query_index.keys())}\n")
             smaller_index.write(f"--------------------------------------------\n")
             for token in self.query_index:
                 smaller_index.write(f"Current token - {token} - has the the following entries: \n")
+                smaller_index.write(f"\t postings: {self.query_index[token]}")
                 for posting in self.query_index[token]:
                     smaller_index.write(f"\t {posting}\n")
                 smaller_index.write(f"--------------------------------------------\n")
 
 if __name__ == "__main__":
-    query_tokens = ["the"]
+    query_tokens = ["mach", "learn"]
     small_index = IndexMerge(query_tokens)
     time_start= time.time() # start the timer for creating report
     small_index.merge_index(".")
