@@ -2,7 +2,8 @@
 
 ## TODO:
 - Need to merge a smaller index in batches (if needed) -- Tristan
-- Need to sort the smaller index properly, look at the smaller_index.txt to see how it is being currently sorted
+- Need to sort the smaller index properly, look at the smaller_index.txt to see how it is being currently sorted -- Tristan
+- Parse and tokenize the search query text -- Whole group 
 - Identify important words -- Axel
 - Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
 - Also possibly implement threading and/or multiprocessing to speed up index
