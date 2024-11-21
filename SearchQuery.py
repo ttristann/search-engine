@@ -71,7 +71,8 @@ class SearchQuery:
         THIS IS A BASIC IMPLEMENTATION RIGHT NOW, ONLY GETS
         THE TOP 5 URLS FOR EACH TOKEN
 
-        TODO: implement a way to incorporate boolean logic
+        TODO: implement a way to incorporate boolean AND ogic
+        across the different tokens
         """
         pass 
 
