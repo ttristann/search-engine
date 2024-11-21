@@ -73,7 +73,6 @@ class SearchQuery:
 
         TODO: implement a way to incorporate boolean logic
         """
-
         pass 
 
 
