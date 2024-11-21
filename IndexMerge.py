@@ -35,7 +35,7 @@ class IndexMerge:
         
         Merges all of the postings of the same tokens
         located in the various partial indexes, while
-        sorting them based on the docID, in descending order. 
+        sorting them based on the docID, in ascending order. 
 
         TODO: 
         - implement a error handling when the key is not present
@@ -55,27 +55,34 @@ class IndexMerge:
                         # partial index and then check if token is in query_token --> more efficient
                         for q_token in self.query_tokens:
                             # access the current and new postings to be combined
-                            current_posting = self.query_index[q_token]
-                            new_posting = content[q_token]
+                            current_posting = self.query_index.get(q_token, [])
+                            new_posting = content.get(q_token, [])
+
+                            if not new_posting: continue # skips if there is no new posting
 
                             # merges and sort the current posting list with the newly loaded posting
-                            merged_posting = list(heapq.merge(current_posting, new_posting, key=lambda x: x[0]))
-                            self.query_index[q_token] = merged_posting
+                            combined_posting = current_posting + new_posting
+                            merged_posting = sorted(combined_posting, key=lambda x: x[0])
+                            self.query_index[q_token] = list(merged_posting)
 
                     except json.JSONDecodeError as e:
                         print(f"The error {e} has occured when processing {file}")
+                    except KeyError as e:
+                        print(f"Token {e} missing in file {file}. Skipping.")
+                    except Exception as e:
+                        print(f"Unexpected error while processing {file}: {e}")
 
-        ### testing purposes
-        # with open("smaller_index.txt", "w") as smaller_index:
-        #     smaller_index.flush()
-        #     smaller_index.write(f"Main tokens: {list(self.query_index.keys())}\n")
-        #     smaller_index.write(f"--------------------------------------------\n")
-        #     for token in self.query_index:
-        #         smaller_index.write(f"Current token - {token} - has the the following entries: \n")
-        #         smaller_index.write(f"\t postings: {self.query_index[token]}")
-        #         for posting in self.query_index[token]:
-        #             smaller_index.write(f"\t {posting}\n")
-        #         smaller_index.write(f"--------------------------------------------\n")
+        ## testing purposes
+        with open("smaller_index.txt", "w") as smaller_index:
+            smaller_index.flush()
+            smaller_index.write(f"Main tokens: {list(self.query_index.keys())}\n")
+            smaller_index.write(f"--------------------------------------------\n")
+            for token in self.query_index:
+                smaller_index.write(f"Current token - {token} - has the the following entries: \n")
+                smaller_index.write(f"\t postings: {self.query_index[token]}")
+                for posting in self.query_index[token]:
+                    smaller_index.write(f"\t {posting}\n")
+                smaller_index.write(f"--------------------------------------------\n")
 
     def get_query_index(self):
         """
