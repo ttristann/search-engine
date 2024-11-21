@@ -7,3 +7,4 @@ __pycache__/
 # Ignore batch output files
 Output_batch_*.txt 
 smaller_index.txt
+docID_to_URL.txt
