@@ -18,6 +18,8 @@ from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
 
+docId_dict = dict()
+
 def writer_thread_worker(writer_thread_queue):
     while True:
         thread = writer_thread_queue.get()
@@ -146,7 +148,10 @@ def build_index(folder_path):
                 task = pool.apply_async(process_file, args=(main_text, docId))
                 tasks_per_batch.append(task) # add task to the current batch
 
+                # updates the docID_dict to add the entry docId: url
+                docId_dict[docId] = data.get("url")
                 docId += 1
+                #
 
                 # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
                 if len(tasks_per_batch) % batchSize == 0:
@@ -186,7 +191,7 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    folder_path = Path('ANALYST')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -200,5 +205,16 @@ if __name__ == "__main__":
     time_end_2 = time.time() # end the timer for creating report
 
     print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
+
+    
+
+    time_start_3 = time.time() # start the timer for writing dictionary
+    with open("docID_dict.txt", "w") as dicto:
+            dicto.flush()
+            for key in docId_dict:
+                dicto.write(f"{key}: {docId_dict[key]}\n")
+    time_end_3 = time.time() # end the timer for writing dictionary
+
+    print(f"Finished dictionary process in: {time_end_3 - time_start_3} seconds...")
 
 

@@ -1,8 +1,8 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- Need to merge a smaller index in batches (if needed) -- Tristan
-- Need to sort the smaller index properly, look at the smaller_index.txt to see how it is being currently sorted
+- Implement Boolean operation
+- Implement some kind of ranking to determine top 5
 - Identify important words -- Axel
 - Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
 - Also possibly implement threading and/or multiprocessing to speed up index
