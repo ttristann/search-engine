@@ -3,6 +3,10 @@ from collections import defaultdict
 from IndexMerge import IndexMerge
 from IndexBuilder import docId_dict, build_index
 from nltk.stem import SnowballStemmer
+from Scoring import Scoring
+from tokenizer import Tokenizer
+import requests
+from bs4 import BeautifulSoup
 
 
 """
@@ -24,6 +28,8 @@ class SearchQuery:
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
         self.query_results = defaultdict(list)
+        self.scores = Scoring()  # keeping track of number of documents found in smaller_index
+        self.tokenizer = Tokenizer()
 
     def tokenize_query(self):
         """
@@ -87,7 +93,7 @@ class SearchQuery:
         """
         # in order for the docID dict to be compiled IndexBuilder has be to executed first
         # print(len(docId_dict))
-        smaller_index = self.get_smaller_index()
+        smaller_index = self.get_smaller_index() # smaller index is a dictionary, key is docID(save space), Value is 
         for token in smaller_index:
             count = 0 # to keep track how many of the top 5 urls have been added
             postings = smaller_index.get(token, [])
@@ -100,20 +106,23 @@ class SearchQuery:
                 # appends the url to the top 5
                 self.query_results[token].append(current_url)
                 count += 1
-                if count >= 5: break
+                if count >= 2: break
                 
         # for testing purposes
         for key in self.query_results:
             print(f"token: {key}\n")
             for entry in self.query_results[key]:
+                response = requests.get(entry)
+                soup_obj = BeautifulSoup(response.content, 'html.parser')
+                text = soup_obj.get_text()
+                print(self.tokenizer.modified_tokenize(text,key))  #key is the query result
                 print(f"\t {entry}")
 
             print("---------------------")
 
 
 
-
-
+# doc id holds key: docID, value : url
 
 if __name__ == "__main__":
     query_text = "cristina lopes"
@@ -122,3 +131,5 @@ if __name__ == "__main__":
     search.tokenize_query()
     search.create_smaller_index()
     search.match_search_query()
+
+    

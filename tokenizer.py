@@ -22,6 +22,8 @@ class Tokenizer:
         then checks if the resulting token meets the 
         condition to be a valid one. 
         """
+        
+
         final_string = " "
         current_token = []
         for char in main_text:
@@ -36,6 +38,38 @@ class Tokenizer:
         if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
             combined = ''.join(current_token)
             yield combined
+
+    def modified_tokenize(self, main_text, word):
+        """
+        Iterates through the main text to build tokens
+        by adding alphanumeric characters to a token, 
+        then checks if the resulting token meets the 
+        condition to be a valid one. 
+        """
+        
+        current_word_Count = dict()
+        unique_words = set()
+        current_word_Count[word] = 0
+        final_string = " "
+        current_token = []
+        for char in main_text:
+            if ('A' <= char <='Z') or ('a' <= char <= 'z') or ('0' <= char <= '9'): # checking for alphanumeric value
+                    current_token.append(char.lower()) # normalizes it
+            else:
+                if current_token and len(current_token) >= 3:
+                    combined = ''.join(current_token)
+                    if combined == word:
+                        current_word_Count[word] += 1
+                    unique_words.add(combined)
+                        
+                current_token = [] # resets it to make a new token
+
+        if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
+            combined = ''.join(current_token)
+            if combined == word:
+                current_word_Count[word] += 1
+            unique_words.add(combined)
+        return [current_word_Count, unique_words]
 
     def compute_frequencies(self, tokens):
         """
