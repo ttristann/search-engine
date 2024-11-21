@@ -3,8 +3,10 @@ DEV/
 developer/
 analyst/
 __pycache__/
-ANALYST_2/
+ANALYST/
+DEV/
 
 # Ignore batch output files
 Output_batch_*.txt 
 smaller_index.txt
+report.txt
