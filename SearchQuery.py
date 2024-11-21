@@ -23,7 +23,7 @@ class SearchQuery:
         self.query_text = query_text
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
-        self.query_results = set()
+        self.query_results = list()
 
     def tokenize_query(self):
         """
@@ -78,38 +78,7 @@ class SearchQuery:
         inside the smaller index to get the top 5 results
         or documents based on tf-idf score that is assigned
         with each posting in the inverted index. 
-
-        THIS IS A BASIC IMPLEMENTATION RIGHT NOW, ONLY GETS
-        THE TOP 5 URLS FOR EACH TOKEN
-
-        TODO: implement a way to incorporate boolean AND ogic
-        across the different tokens
         """
-        # # in order for the docID dict to be compiled IndexBuilder has be to executed first
-        # # print(len(docId_dict))
-        # smaller_index = self.get_smaller_index()
-        # for token in smaller_index:
-        #     count = 0 # to keep track how many of the top 5 urls have been added
-        #     postings = smaller_index.get(token, [])
-        #     # iterates the postings for current token
-        #     for posting in postings:
-        #         current_docID = posting[0] 
-        #         # print(f"current_docid: {current_docID}")
-        #         current_url = docId_dict.get(current_docID)
-        #         # print(f"current_url: {current_url}")
-        #         # appends the url to the top 5
-        #         self.query_results[token].append(current_url)
-        #         count += 1
-        #         if count >= 5: break
-                
-        # # for testing purposes
-        # for key in self.query_results:
-        #     print(f"token: {key}\n")
-        #     for entry in self.query_results[key]:
-        #         print(f"\t {entry}")
-
-        #     print("---------------------")
-
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
         # compiles all of the postings into one list
@@ -118,7 +87,6 @@ class SearchQuery:
         docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
         # finds the intersectiong docID
         common_docIDs = set.intersection(*docID_sets)
-
         # filters the postings_list to only the entries that have the common docIDs
         filtered_lists = [
             [(docID, freq) for docID, freq in lst if docID in common_docIDs]
@@ -129,34 +97,24 @@ class SearchQuery:
             sorted(lst, key=lambda x: x[1], reverse=True)
             for lst in filtered_lists
         ]
-
         # iterates the sorted_filtered_list to assign the url to each docID
-        set_of_urls = set() # accumulate the urls 
+        list_of_urls = list() # accumulate the urls 
         for posting_list in sorted_filtered_lists:
             for entry in posting_list:
                 current_docID = entry[0]
                 current_url = docId_dict.get(current_docID)
-                set_of_urls.add(current_url)
+                list_of_urls.append(current_url)
 
-        self.query_results = set_of_urls
+        self.query_results = list_of_urls
 
     def get_top5_urls(self):
-        count = 0
-        for url in self.query_results:
-            print(url)
-            count += 1
-            if count >= 5: break
-
-
-        
-
-
-
-
+        # prints the top 5 urls that matches to the search query
+        for index in range(0, 5):
+            print(self.query_results[index])
 
 
 if __name__ == "__main__":
-    query_text = "cristina lopes"
+    query_text = "master of software engineering"
     docId_dict = build_index("DEV")
     search = SearchQuery(query_text)
     search.tokenize_query()
