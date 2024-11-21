@@ -4,8 +4,7 @@
 - Implement Boolean operation
 - Implement some kind of ranking to determine top 5
 - Identify important words -- Axel
-- Possibly implement simhash algo to avoid near-duplicates, need to talk about this one tho
-- Also possibly implement threading and/or multiprocessing to speed up index
+- Check unique docId count --> docId_to_url dictionary has 54643, unique docID count has 53985
 
 
 ## Setup

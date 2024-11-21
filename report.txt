@@ -1,5 +1,5 @@
-Unique Tokens: 12314
+Unique Tokens: 1061938
 ----------------------------------------
-Total Indexed Documents: 1985
+Total Indexed Documents: 53985
 ----------------------------------------
-Total File Size: 18796.18 KB
+Total File Size: 482627.68 KB

@@ -18,7 +18,7 @@ from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
 
-docId_dict = dict()
+
 
 def writer_thread_worker(writer_thread_queue):
     while True:
@@ -51,7 +51,7 @@ def sort_index(main_index):
                     for word, entries in main_index.items()}
     return sorted_index
 
-def process_file(main_text, docId):
+def process_file(main_text, docId, url):
     temp_index = defaultdict(list) # temporary index to store the current batch's partial index
     # calls tokenizes and normalizes the words within the main text
     current_tokenizer = Tokenizer()
@@ -59,14 +59,18 @@ def process_file(main_text, docId):
     current_tokenizer.compute_frequencies(tokens_list)
     ordered_tokens = current_tokenizer.getTokens()
 
+    # updates the docID_dict to add the entry docId: url
+    temp_docId_to_url = dict()
+    temp_docId_to_url[docId] = url
+
     # creates the posting for the inverted index entries 
     # for the words present in the current file
     for token, frequency in ordered_tokens.items():
         stemmed_token = SnowballStemmer("english").stem(token) # stemming the token
-        current_entry = (docId, frequency) # TENZIN NOTE: might not need to add frequency but let's keep for now
+        current_entry = (docId, frequency)
         temp_index[stemmed_token].append(current_entry)
     
-    return temp_index
+    return temp_index, temp_docId_to_url
     
 
 """
@@ -89,6 +93,7 @@ def build_index(folder_path):
     processes = [] # list of all started processes
 
     main_index = defaultdict(list) # Our main inverted index
+    docId_to_url = dict() # dictionary to store the docId to URL mapping
     docId = 1 # unique identifier for each document, incremented by 1 for each file
     batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
     skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
@@ -108,7 +113,6 @@ def build_index(folder_path):
     # 6. Catch stragglers, AKA remaining files that didn't make it to the last batch
     # 7. Join thread for writer, ensures all files are actually written to disk
     ####################################################################
-
     with multiprocessing.Pool() as pool:
         tasks_per_batch = []
         # iterating through the directory/folder that contains all of the JSON files
@@ -145,11 +149,11 @@ def build_index(folder_path):
                 # print(f"this is the main text: {main_text}")
 
                 # calls the process_file function, tokenizing the file's text and adding it to the main index
-                task = pool.apply_async(process_file, args=(main_text, docId))
+                task = pool.apply_async(process_file, args=(main_text, docId, data.get("url")))
                 tasks_per_batch.append(task) # add task to the current batch
 
                 # updates the docID_dict to add the entry docId: url
-                docId_dict[docId] = data.get("url")
+                # docId_dict[docId] = data.get("url")
                 docId += 1
                 #
 
@@ -157,10 +161,10 @@ def build_index(folder_path):
                 if len(tasks_per_batch) % batchSize == 0:
                     # retrieving the current batch of processed files
                     for task in tasks_per_batch:
-                        partial_index = task.get() # get the partial index from the task
+                        partial_index, task_docId_mapping = task.get() # get the partial index from the task
                         for word, postings in partial_index.items():
                             main_index[word] += postings
-                    
+                        docId_to_url.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                     batchCount += 1 # increment the batch count
 
                     # Sort and Write the current batch to disk   
@@ -172,10 +176,11 @@ def build_index(folder_path):
 
         # Process the remaining files if any
         for task in tasks_per_batch:
-            partial_index = task.get()
+            partial_index, task_docId_mapping = task.get()
             for word, postings in partial_index.items():
                 main_index[word].extend(postings)
-        
+            docId_to_url.update(task_docId_mapping)
+
         if main_index:
             batchCount += 1
             # Sort and Write remaining files to disk if any (Catch the stragglers)
@@ -183,15 +188,18 @@ def build_index(folder_path):
             writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
             # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
     
+    writer_thread_queue.put((docId_to_url, "docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
     writer_thread_queue.join()
     writer_thread_queue.put(None)
     writer_thread.join()
-
+    print("All files have been processed and written to disk...")
+    print(f"Total docID to URL mappings: {len(docId_to_url)}")
+    print("-----------------------------------------------------")
     return main_index
 
 
 if __name__ == "__main__":
-    folder_path = Path('ANALYST')
+    folder_path = Path('developer/DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -208,13 +216,13 @@ if __name__ == "__main__":
 
     
 
-    time_start_3 = time.time() # start the timer for writing dictionary
-    with open("docID_dict.txt", "w") as dicto:
-            dicto.flush()
-            for key in docId_dict:
-                dicto.write(f"{key}: {docId_dict[key]}\n")
-    time_end_3 = time.time() # end the timer for writing dictionary
+    # time_start_3 = time.time() # start the timer for writing dictionary
+    # with open("docID_dict.txt", "w") as dicto:
+    #         dicto.flush()
+    #         for key in docId_dict:
+    #             dicto.write(f"{key}: {docId_dict[key]}\n")
+    # time_end_3 = time.time() # end the timer for writing dictionary
 
-    print(f"Finished dictionary process in: {time_end_3 - time_start_3} seconds...")
+    # print(f"Finished dictionary process in: {time_end_3 - time_start_3} seconds...")
 
 
