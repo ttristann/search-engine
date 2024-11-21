@@ -72,17 +72,17 @@ class IndexMerge:
                     except Exception as e:
                         print(f"Unexpected error while processing {file}: {e}")
 
-        ## testing purposes
-        with open("smaller_index.txt", "w") as smaller_index:
-            smaller_index.flush()
-            smaller_index.write(f"Main tokens: {list(self.query_index.keys())}\n")
-            smaller_index.write(f"--------------------------------------------\n")
-            for token in self.query_index:
-                smaller_index.write(f"Current token - {token} - has the the following entries: \n")
-                smaller_index.write(f"\t postings: {self.query_index[token]}")
-                for posting in self.query_index[token]:
-                    smaller_index.write(f"\t {posting}\n")
-                smaller_index.write(f"--------------------------------------------\n")
+        # ## testing purposes
+        # with open("smaller_index.txt", "w") as smaller_index:
+        #     smaller_index.flush()
+        #     smaller_index.write(f"Main tokens: {list(self.query_index.keys())}\n")
+        #     smaller_index.write(f"--------------------------------------------\n")
+        #     for token in self.query_index:
+        #         smaller_index.write(f"Current token - {token} - has the the following entries: \n")
+        #         smaller_index.write(f"\t postings: {self.query_index[token]}\n")
+        #         for posting in self.query_index[token]:
+        #             smaller_index.write(f"\t {posting}\n")
+        #         smaller_index.write(f"--------------------------------------------\n")
 
     def get_query_index(self):
         """
@@ -93,7 +93,7 @@ class IndexMerge:
         return self.query_index
 
 if __name__ == "__main__":
-    query_tokens = ["mach", "learn"]
+    query_tokens = ["crista"]
     small_index = IndexMerge(query_tokens)
     time_start= time.time() # start the timer for creating report
     small_index.merge_index(".")

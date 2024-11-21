@@ -1,7 +1,9 @@
 import re
 from collections import defaultdict
 from IndexMerge import IndexMerge
+from IndexBuilder import docId_dict, build_index
 from nltk.stem import SnowballStemmer
+
 
 """
 This class is utilzed for analyzing and parsing 
@@ -20,7 +22,8 @@ class SearchQuery:
     def __init__(self, query_text):
         self.query_text = query_text
         self.query_tokens = list()
-        self.smaller_index = defaultdict(dict)
+        self.smaller_index = defaultdict(list)
+        self.query_results = defaultdict(list)
 
     def tokenize_query(self):
         """
@@ -61,6 +64,14 @@ class SearchQuery:
         # assigns/updates attribute to be used in another function
         self.smaller_index = indexMerge.get_query_index()
 
+    def get_smaller_index(self):
+        """
+        Returns the updated smaller_index to be used
+        outside of the function or class.
+        """
+
+        return self.smaller_index
+
     def match_search_query(self): 
         """
         Matches the search query tokens with the tokens
@@ -74,12 +85,40 @@ class SearchQuery:
         TODO: implement a way to incorporate boolean AND ogic
         across the different tokens
         """
-        pass 
+        # in order for the docID dict to be compiled IndexBuilder has be to executed first
+        # print(len(docId_dict))
+        smaller_index = self.get_smaller_index()
+        for token in smaller_index:
+            count = 0 # to keep track how many of the top 5 urls have been added
+            postings = smaller_index.get(token, [])
+            # iterates the postings for current token
+            for posting in postings:
+                current_docID = posting[0] 
+                # print(f"current_docid: {current_docID}")
+                current_url = docId_dict.get(current_docID)
+                # print(f"current_url: {current_url}")
+                # appends the url to the top 5
+                self.query_results[token].append(current_url)
+                count += 1
+                if count >= 5: break
+                
+        # for testing purposes
+        for key in self.query_results:
+            print(f"token: {key}\n")
+            for entry in self.query_results[key]:
+                print(f"\t {entry}")
+
+            print("---------------------")
+
+
 
 
 
 
 if __name__ == "__main__":
-    query_text = "How to train your Dragon"
+    query_text = "cristina lopes"
+    build_index("ANALYST")
     search = SearchQuery(query_text)
     search.tokenize_query()
+    search.create_smaller_index()
+    search.match_search_query()

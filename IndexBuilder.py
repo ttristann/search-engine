@@ -191,7 +191,7 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    folder_path = Path('ANALYST')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -209,7 +209,7 @@ if __name__ == "__main__":
     
 
     time_start_3 = time.time() # start the timer for writing dictionary
-    with open("smaller_index.txt", "w") as dicto:
+    with open("docID_dict.txt", "w") as dicto:
             dicto.flush()
             for key in docId_dict:
                 dicto.write(f"{key}: {docId_dict[key]}\n")
