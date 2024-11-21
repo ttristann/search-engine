@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 from IndexMerge import IndexMerge
-from IndexBuilder import docId_dict, build_index
+from IndexBuilder import build_index
 from nltk.stem import SnowballStemmer
 
 
@@ -72,7 +72,7 @@ class SearchQuery:
 
         return self.smaller_index
 
-    def match_search_query(self): 
+    def match_search_query(self, docId_dict): 
         """
         Matches the search query tokens with the tokens
         inside the smaller index to get the top 5 results
@@ -156,10 +156,10 @@ class SearchQuery:
 
 
 if __name__ == "__main__":
-    query_text = "master of software engineering"
-    build_index("DEV")
+    query_text = "cristina lopes"
+    docId_dict = build_index("DEV")
     search = SearchQuery(query_text)
     search.tokenize_query()
     search.create_smaller_index()
-    search.match_search_query()
+    search.match_search_query(docId_dict)
     search.get_top5_urls()

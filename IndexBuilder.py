@@ -195,7 +195,7 @@ def build_index(folder_path):
     print("All files have been processed and written to disk...")
     print(f"Total docID to URL mappings: {len(docId_to_url)}")
     print("-----------------------------------------------------")
-    return main_index
+    return docId_to_url
 
 
 if __name__ == "__main__":
