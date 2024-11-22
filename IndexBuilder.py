@@ -213,6 +213,3 @@ if __name__ == "__main__":
     # time_end_2 = time.time() # end the timer for creating report
 
     # print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
-
-
-
