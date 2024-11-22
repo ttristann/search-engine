@@ -134,6 +134,7 @@ if __name__ == "__main__":
     search.tokenize_query()
     search.create_smaller_index() # can use time to track how long it takes for the smaller index to be created
     search.match_search_query(docId_dict)
+    print("Here are the top 5 results: ")
     search.get_top5_urls()
     time_end_2 = time.time()
     print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
