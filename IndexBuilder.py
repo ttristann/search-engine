@@ -208,21 +208,11 @@ if __name__ == "__main__":
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
 
-    time_start_2 = time.time() # start the timer for creating report
-    report_creation('.')
-    time_end_2 = time.time() # end the timer for creating report
+    # time_start_2 = time.time() # start the timer for creating report
+    # report_creation('.')
+    # time_end_2 = time.time() # end the timer for creating report
 
-    print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
+    # print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
 
-    
-
-    # time_start_3 = time.time() # start the timer for writing dictionary
-    # with open("docID_dict.txt", "w") as dicto:
-    #         dicto.flush()
-    #         for key in docId_dict:
-    #             dicto.write(f"{key}: {docId_dict[key]}\n")
-    # time_end_3 = time.time() # end the timer for writing dictionary
-
-    # print(f"Finished dictionary process in: {time_end_3 - time_start_3} seconds...")
 
 

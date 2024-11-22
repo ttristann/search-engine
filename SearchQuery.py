@@ -1,4 +1,5 @@
 import re
+import time
 from collections import defaultdict
 from IndexMerge import IndexMerge
 from IndexBuilder import build_index
@@ -109,15 +110,36 @@ class SearchQuery:
 
     def get_top5_urls(self):
         # prints the top 5 urls that matches to the search query
-        for index in range(0, 5):
-            print(self.query_results[index])
+        discovered_urls = set()
+        count = 0
+        index = 0
+        for url in self.query_results:
+            if url not in discovered_urls:
+                print(self.query_results[index])
+                discovered_urls.add(url)
+                count += 1
+            index += 1
+            if count >= 5: break
 
 
 if __name__ == "__main__":
     query_text = "master of software engineering"
+
+    time_start = time.time()
     docId_dict = build_index("DEV")
+    time_end = time.time()
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+
+    time_start_2 = time.time()
     search = SearchQuery(query_text)
+    time_end_2 = time.time()
+    print(f"Finished MergeIndex creation process in: {time_end_2 - time_start_2} seconds...")
+
+    time_start_3 = time.time()
     search.tokenize_query()
     search.create_smaller_index()
     search.match_search_query(docId_dict)
     search.get_top5_urls()
+    time_end_3 = time.time()
+    print(f"Finished Query Search process in: {time_end_3 - time_start_3} seconds...")
+
