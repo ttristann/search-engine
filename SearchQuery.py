@@ -128,7 +128,7 @@ if __name__ == "__main__":
     time_end = time.time()
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
 
-    query_text = input("What would you to search for: ")
+    query_text = input("What would you like to search for: ")
     time_start_2 = time.time()
     search = SearchQuery(query_text)
     search.tokenize_query()
