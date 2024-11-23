@@ -1,10 +1,12 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- Implement Boolean operation
-- Implement some kind of ranking to determine top 5
 - Identify important words -- Axel
 - Check unique docId count --> docId_to_url dictionary has 54643, unique docID count has 53985
+- SIMHASH implementation
+- tf-idf implementation
+- GUI implementation
+- Convert IndexBuilder.py into a class object, have a getter for retrieving the index after creation so we don't have to build it over and over again in SearchQuery.py
 
 
 ## Setup
