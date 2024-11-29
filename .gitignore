@@ -9,4 +9,4 @@ DEV/
 # Ignore batch output files
 Output_batch_*.txt 
 smaller_index.txt
-report.txt
+docID_to_URL.txt

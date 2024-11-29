@@ -1,12 +1,14 @@
 import re
+import time
 from collections import defaultdict
 from IndexMerge import IndexMerge
-from IndexBuilder import docId_dict, build_index
+from IndexBuilder import build_index
 from nltk.stem import SnowballStemmer
 from Scoring import Scoring
 from tokenizer import Tokenizer
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 
 """
@@ -27,9 +29,11 @@ class SearchQuery:
         self.query_text = query_text
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
-        self.query_results = defaultdict(list)
+        self.query_results = list()
         self.scores = Scoring()  # keeping track of number of documents found in smaller_index
-        self.tokenizer = Tokenizer()
+
+    def getSmallerIndex(self):
+        return self.smaller_index
 
     def tokenize_query(self):
         """
@@ -78,58 +82,90 @@ class SearchQuery:
 
         return self.smaller_index
 
-    def match_search_query(self): 
+    def match_search_query(self, docId_dict): 
         """
         Matches the search query tokens with the tokens
         inside the smaller index to get the top 5 results
         or documents based on tf-idf score that is assigned
         with each posting in the inverted index. 
-
-        THIS IS A BASIC IMPLEMENTATION RIGHT NOW, ONLY GETS
-        THE TOP 5 URLS FOR EACH TOKEN
-
-        TODO: implement a way to incorporate boolean AND ogic
-        across the different tokens
         """
-        # in order for the docID dict to be compiled IndexBuilder has be to executed first
-        # print(len(docId_dict))
-        smaller_index = self.get_smaller_index() # smaller index is a dictionary, key is docID(save space), Value is 
-        for token in smaller_index:
-            count = 0 # to keep track how many of the top 5 urls have been added
-            postings = smaller_index.get(token, [])
-            # iterates the postings for current token
-            for posting in postings:
-                current_docID = posting[0] 
-                # print(f"current_docid: {current_docID}")
+        ### this to make report for M2
+        smaller_index = self.get_smaller_index()
+        # compiles all of the postings into one list
+        postings_list = [smaller_index[key] for key in smaller_index]
+        # this is to collect the sets of docID each token has
+        docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
+        # finds the intersectiong docID
+        common_docIDs = set.intersection(*docID_sets)
+        # filters the postings_list to only the entries that have the common docIDs
+        filtered_lists = [
+            [(docID, freq) for docID, freq in lst if docID in common_docIDs]
+            for lst in postings_list
+        ]
+        # sorts them by freq descending
+        sorted_filtered_lists = [
+            sorted(lst, key=lambda x: x[1], reverse=True)
+            for lst in filtered_lists
+        ]
+        # iterates the sorted_filtered_list to assign the url to each docID
+        list_of_urls = list() # accumulate the urls 
+        for posting_list in sorted_filtered_lists:
+            for entry in posting_list:
+                current_docID = entry[0]
                 current_url = docId_dict.get(current_docID)
-                # print(f"current_url: {current_url}")
-                # appends the url to the top 5
-                self.query_results[token].append(current_url)
+                list_of_urls.append(current_url)
+
+        self.query_results = list_of_urls
+
+    def is_valid_url(self, url):
+        try:
+            # Check if the URL is well-formed
+            result = urlparse(url)
+            return all([result.scheme, result.netloc])  # valid if scheme and netloc exist
+        except ValueError:
+            return False
+
+    def get_top5_urls(self):
+        # prints the top 5 urls that matches to the search query
+        discovered_urls = set()
+        count = 0
+        index = 0
+        for url in self.query_results:
+            if url not in discovered_urls:
+                print(self.query_results[index])
+                if url != None:
+                    if self.is_valid_url(url):
+                        print(f"\t {url}")
+                        response = requests.head(url)
+                        # soup_obj = BeautifulSoup(response.content, 'html.parser')
+                        # text = soup_obj.get_text()
+                        # print(self.tokenizer.modified_tokenize(text,url))  #key is the query result
+                    
+
+
+
+                discovered_urls.add(url)
                 count += 1
-                if count >= 2: break
-                
-        # for testing purposes
-        for key in self.query_results:
-            print(f"token: {key}\n")
-            for entry in self.query_results[key]:
-                response = requests.get(entry)
-                soup_obj = BeautifulSoup(response.content, 'html.parser')
-                text = soup_obj.get_text()
-                print(self.tokenizer.modified_tokenize(text,key))  #key is the query result
-                print(f"\t {entry}")
+            index += 1
+            if count >= 5: break
 
-            print("---------------------")
-
-
-
-# doc id holds key: docID, value : url
 
 if __name__ == "__main__":
-    query_text = "cristina lopes"
-    build_index("ANALYST")
-    search = SearchQuery(query_text)
-    search.tokenize_query()
-    search.create_smaller_index()
-    search.match_search_query()
-
+    time_start = time.time()
+    docId_dict = build_index("ANALYST") # DEV
+    time_end = time.time()
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
     
+    while True:
+        query_text = input("What would you like to search for: ")
+        time_start_2 = time.time()
+        search = SearchQuery(query_text)
+        search.tokenize_query()
+        search.create_smaller_index() # can use time to track how long it takes for the smaller index to be created
+        search.match_search_query(docId_dict)
+        print("Here are the top 10 results: ")
+        search.get_top5_urls()
+        time_end_2 = time.time()
+        print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
+        print("this is the smaller index: ", search.getSmallerIndex)
+
