@@ -8,3 +8,5 @@ __pycache__/
 Output_batch_*.txt 
 smaller_index.txt
 docID_to_URL.txt
+
+.DS_Store

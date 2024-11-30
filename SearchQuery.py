@@ -2,7 +2,7 @@ import re
 import time
 from collections import defaultdict
 from IndexMerge import IndexMerge
-from IndexBuilder import build_index
+from IndexBuilder import IndexBuilder
 from nltk.stem import SnowballStemmer
 
 
@@ -123,9 +123,18 @@ class SearchQuery:
 
 
 if __name__ == "__main__":
+    mac_path = 'DEV'
+    win_path = 'develper/DEV'
+
     time_start = time.time()
-    docId_dict = build_index("developer/DEV")
+
+    # instantiates an IndexBuilder object and creates the inverted index
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
+    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    
     time_end = time.time()
+
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
     
     while True:
