@@ -151,13 +151,19 @@ if __name__ == "__main__":
         # print(search.get_smaller_index())
         sortedTFIDF = {}
 
+        # print(search.get_smaller_index().keys())
         for key, value in search.get_smaller_index().items():
+            # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
+            # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
             for pair in value:
                 #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
-                # print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
-                # print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), pair[1])}", end=" ")
-                # print(f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), pair[1])}")
-                sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), pair[1])
+                print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
+                print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
+                print(
+                    f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
+                
+                
+                sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))
         sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
         for key, value in sortedTFIDF.items():
             print(f"{key}: {value}")
