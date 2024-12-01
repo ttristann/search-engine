@@ -5,10 +5,6 @@ from IndexMerge import IndexMerge
 from IndexBuilder import build_index
 from nltk.stem import SnowballStemmer
 from Scoring import Scoring
-from tokenizer import Tokenizer
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 
 
 """
@@ -30,9 +26,8 @@ class SearchQuery:
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
         self.query_results = list()
-        self.scores = Scoring()  # keeping track of number of documents found in smaller_index
 
-    def getSmallerIndex(self):
+    def get_smaller_index(self):
         return self.smaller_index
 
     def tokenize_query(self):
@@ -117,14 +112,6 @@ class SearchQuery:
 
         self.query_results = list_of_urls
 
-    def is_valid_url(self, url):
-        try:
-            # Check if the URL is well-formed
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])  # valid if scheme and netloc exist
-        except ValueError:
-            return False
-
     def get_top5_urls(self):
         # prints the top 5 urls that matches to the search query
         discovered_urls = set()
@@ -133,39 +120,47 @@ class SearchQuery:
         for url in self.query_results:
             if url not in discovered_urls:
                 print(self.query_results[index])
-                if url != None:
-                    if self.is_valid_url(url):
-                        print(f"\t {url}")
-                        response = requests.head(url)
-                        # soup_obj = BeautifulSoup(response.content, 'html.parser')
-                        # text = soup_obj.get_text()
-                        # print(self.tokenizer.modified_tokenize(text,url))  #key is the query result
-                    
-
-
-
                 discovered_urls.add(url)
                 count += 1
             index += 1
-            if count >= 5: break
+            if count >= 10: break
 
 
 if __name__ == "__main__":
     time_start = time.time()
-    docId_dict = build_index("ANALYST") # DEV
+    docId_dict = build_index("ANALYST")
     time_end = time.time()
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    scores = Scoring()
     
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
-        search = SearchQuery(query_text)
-        search.tokenize_query()
-        search.create_smaller_index() # can use time to track how long it takes for the smaller index to be created
+        search = SearchQuery(query_text) # initializes SearchQuery object
+        search.tokenize_query()  # # stems search query words. ex: lopes --> lope
+        search.create_smaller_index() # 
         search.match_search_query(docId_dict)
-        print("Here are the top 10 results: ")
+        print("Here are the top 5 results: ")
+
+        #new dictionary --> {docID: tf-idf}
+        #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
+        #tf-idf =  1 + log()
+
+
         search.get_top5_urls()
+        # print(search.get_smaller_index())
+        sortedTFIDF = {}
+
+        for key, value in search.get_smaller_index().items():
+            for pair in value:
+                #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
+                # print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
+                # print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), pair[1])}", end=" ")
+                # print(f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), pair[1])}")
+                sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), pair[1])
+        sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
+        for key, value in sortedTFIDF.items():
+            print(f"{key}: {value}")
+
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-        print("this is the smaller index: ", search.getSmallerIndex)
-
