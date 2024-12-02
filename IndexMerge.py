@@ -83,20 +83,21 @@ class IndexMerge:
         ]
 
         # set the numbers of processes to do
-        num_processes = 4  # amount cores current device have
+        num_processes = 6  # amount cores current device have
         chunk_size = len(files) // num_processes + (len(files) % num_processes > 0)
         file_chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
 
-
-
+        # establish pools that holds all of the processes that have their
+        # own output batch files to handle and create even smaller indexes 
         with Pool(processes=num_processes) as pool:
             results = pool.starmap(self._process_files, [(chunk, self.query_tokens) for chunk in file_chunks])
 
-        # Step 4: Merge results from all workers
+        # merge results from all workers
         for partial_index in results:
             for token, postings in partial_index.items():
                 current_posting = self.query_index.get(token, [])
                 combined_posting = current_posting + postings
+                # updating the main small index
                 self.query_index[token] = list(sorted(combined_posting, key=lambda x: x[0]))
 
         # ## testing purposes

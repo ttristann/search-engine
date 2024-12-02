@@ -8,16 +8,7 @@
 - GUI implementation
 - figure out way to implement the proper way of finding intersections (starting with smallest set) -- tristan
 - MAIN PRIORITY:
-    To make the search portion way more faster than as of right now (~4.13 seconds for crista lopes),
-    need to implement a multiprocessing functionality when creating the smaller index that only has
-    the tokens that has been parsed from the search query. 
-    
-    Proposed process:
-    - break up the search query terms 
-    - have a "director" machine assign different processes to different query terms
-    - each process will create an even smaller index that has the subquery terms
-    - once all processes have been finished, the director will combine them
-    - assign combined index to the main attribute small_index
+    KEEP THINKING OF WAYS TO MAKE IT FASTER (RN 2.64 for "crista lopes")
 
 
 ## Setup
