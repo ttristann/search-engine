@@ -1,10 +1,10 @@
 # Directories to Ignore
-#DEV/
+DEV/
 developer/
 analyst/
 __pycache__/
 ANALYST/
-#DEV/
+DEV/
 
 # Ignore batch output files
 Output_batch_*.txt 
