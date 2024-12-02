@@ -199,7 +199,7 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = Path('developer/DEV')
+    folder_path = Path('DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -207,9 +207,3 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer for index
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
-
-    # time_start_2 = time.time() # start the timer for creating report
-    # report_creation('.')
-    # time_end_2 = time.time() # end the timer for creating report
-
-    # print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")
