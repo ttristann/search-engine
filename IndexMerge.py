@@ -1,5 +1,5 @@
 from collections import defaultdict
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, Pool
 import os, json
 import heapq
 import time
@@ -29,7 +29,7 @@ class IndexMerge:
         self.query_index = defaultdict(list)
 
     @staticmethod
-    def _process_files(file_list, query_tokens, result_dict, process_id):
+    def _process_files(file_list, query_tokens):
         """
         A helper function that is called for each process 
         that are being executed in parallel using the 
@@ -60,8 +60,7 @@ class IndexMerge:
             except Exception as e:
                 print(f"Unexpected error while processing {file_path}: {e}")
 
-        # updating the shared dictionary
-        result_dict[process_id] = local_query_index
+        return local_query_index
 
 
     def merge_index(self, main_directory):
@@ -85,29 +84,16 @@ class IndexMerge:
 
         # set the numbers of processes to do
         num_processes = 4  # amount cores current device have
-        chunk_size = len(files) // num_processes
+        chunk_size = len(files) // num_processes + (len(files) % num_processes > 0)
         file_chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
 
-        # establishing multiprocessing
-        manager = Manager()
-        result_dict = manager.dict()  # Shared dictionary to collect results
-        processes = []
 
-        # creating the different processes that are going to run in parallel
-        for i, chunk in enumerate(file_chunks):
-            process = Process(
-                target=self._process_files,
-                args=(chunk, self.query_tokens, result_dict, i)
-            )
-            processes.append(process)
-            process.start()
 
-        # waiting to finish and combining all processe
-        for process in processes:
-            process.join()
+        with Pool(processes=num_processes) as pool:
+            results = pool.starmap(self._process_files, [(chunk, self.query_tokens) for chunk in file_chunks])
 
-        # merge partial query indexes from all processes
-        for partial_index in result_dict.values():
+        # Step 4: Merge results from all workers
+        for partial_index in results:
             for token, postings in partial_index.items():
                 current_posting = self.query_index.get(token, [])
                 combined_posting = current_posting + postings
