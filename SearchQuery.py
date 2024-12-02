@@ -2,7 +2,7 @@ import re
 import time
 from collections import defaultdict
 from IndexMerge import IndexMerge
-from IndexBuilder import build_index
+from IndexBuilder import IndexBuilder
 from nltk.stem import SnowballStemmer
 from Scoring import Scoring
 
@@ -127,9 +127,18 @@ class SearchQuery:
 
 
 if __name__ == "__main__":
+    mac_path = 'ANALYST' #DEV
+    # win_path = 'develper/DEV'
+
     time_start = time.time()
-    docId_dict = build_index("ANALYST")
+
+    # instantiates an IndexBuilder object and creates the inverted index
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
+    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    
     time_end = time.time()
+
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
     scores = Scoring()
     
@@ -157,13 +166,19 @@ if __name__ == "__main__":
             # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
             for pair in value:
                 #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
-                print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
-                print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
-                print(
-                    f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
+                # print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
+                # print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
+                # print(
+                #     f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
                 
-                
-                sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))
+                # sortedTFIDF[pair[0]] = (scores.term_frequency(pair[1]) * 
+                #                         scores.inverse_document_frequency(len(docId_dict), 
+                #                         len(search.get_smaller_index()[key])))
+
+                # tf_idf(tf, N, DF)
+                sortedTFIDF[pair[0]] = scores.tf_idf(pair[1], len(docId_dict), len(search.get_smaller_index()[key]))
+
+            
         sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
         for key, value in sortedTFIDF.items():
             print(f"{key}: {value}")
