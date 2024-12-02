@@ -5,6 +5,7 @@ from IndexMerge import IndexMerge
 from IndexBuilder import build_index
 from nltk.stem import SnowballStemmer
 from Scoring import Scoring
+from multiprocessing import Process, Manager, Pool
 
 
 """
@@ -76,43 +77,85 @@ class SearchQuery:
         """
 
         return self.smaller_index
+    
+    @staticmethod
+    def intersect_postings(postings_pair):
+        """
+        Performs intersection and merging of two postings lists.
+        Args:
+            postings_pair (tuple): A tuple containing two postings lists to intersect.
+        Returns:
+            list: Merged and sorted posting list after intersection.
+        """
+        list1, list2 = postings_pair
 
-    def match_search_query(self, docId_dict): 
+        # Convert postings to sets of docIDs for intersection
+        set1 = set(docID for docID, freq in list1)
+        set2 = set(docID for docID, freq in list2)
+        common_docIDs = set1 & set2
+
+        # Filter and merge the postings lists based on common_docIDs
+        merged_posting = [
+            (docID, freq1 + freq2)
+            for (docID, freq1) in list1 if docID in common_docIDs
+            for (_, freq2) in list2 if docID == _
+        ]
+
+        # Sort merged postings by docID (ascending)
+        return sorted(merged_posting, key=lambda x: x[0])
+    
+
+
+    def match_search_query(self, docId_dict):
         """
         Matches the search query tokens with the tokens
         inside the smaller index to get the top 5 results
         or documents based on tf-idf score that is assigned
-        with each posting in the inverted index. 
-
-        TO DO: NEED A MORE EFFICIENT WAY OF MATCHING
+        with each posting in the inverted index.
+        
+        This optimized version uses multiprocessing to
+        perform intersections in batches.
         """
-        ### this to make report for M2
+        # Step 1: Retrieve the smaller index
         smaller_index = self.get_smaller_index()
-        # compiles all of the postings into one list
-        postings_list = [smaller_index[key] for key in smaller_index]
-        # this is to collect the sets of docID each token has
-        docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
-        # finds the intersectiong docID
-        common_docIDs = set.intersection(*docID_sets)
-        # filters the postings_list to only the entries that have the common docIDs
-        filtered_lists = [
-            [(docID, freq) for docID, freq in lst if docID in common_docIDs]
-            for lst in postings_list
-        ]
-        # sorts them by freq descending
-        sorted_filtered_lists = [
-            sorted(lst, key=lambda x: x[1], reverse=True)
-            for lst in filtered_lists
-        ]
-        # iterates the sorted_filtered_list to assign the url to each docID
-        list_of_urls = list() # accumulate the urls 
-        for posting_list in sorted_filtered_lists:
-            for entry in posting_list:
-                current_docID = entry[0]
-                current_url = docId_dict.get(current_docID)
-                list_of_urls.append(current_url)
 
-        self.query_results = list_of_urls
+        # Step 2: Compile all postings lists
+        postings_list = [
+            smaller_index[key] for key in smaller_index
+        ]
+
+        # Step 3: Sort postings lists by size (smallest first)
+        postings_list.sort(key=len)
+
+        # Step 4: Perform pairwise intersections using multiprocessing
+        with Pool(processes=4) as pool:  # Adjust the number of processes based on your system
+            while len(postings_list) > 1:
+                # Create pairs of postings lists
+                pairs = [(postings_list[i], postings_list[i + 1]) for i in range(0, len(postings_list) - 1, 2)]
+
+                # Perform parallel intersection
+                results = pool.map(self.intersect_postings, pairs)
+
+                # Handle odd postings list (carry over the last unpaired list)
+                if len(postings_list) % 2 == 1:
+                    results.append(postings_list[-1])
+
+                postings_list = results
+                postings_list.sort(key=len)
+
+        # Step 5: Extract the final intersection result
+        if postings_list:
+            final_posting = postings_list[0]
+        else:
+            final_posting = []
+
+        # Step 6: Map docIDs to URLs and sort by tf-idf score
+        sorted_results = sorted(final_posting, key=lambda x: x[1], reverse=True)
+        list_of_urls = [docId_dict.get(docID) for docID, _ in sorted_results]
+
+        # Limit to top 5 results
+        self.query_results = list_of_urls[:5]
+
 
     def get_top5_urls(self):
         # prints the top 5 urls that matches to the search query
