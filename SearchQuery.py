@@ -148,17 +148,17 @@ if __name__ == "__main__":
 
         for key, value in search.get_smaller_index().items():
             for pair in value:
-                #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
-                # print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
-                # print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
-                # print(
-                #     f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
+                # smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
+                print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
+                print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
+                print(
+                    f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
                 
                 
                 sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))
         sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
-        # for key, value in sortedTFIDF.items():
-        #     print(f"{key}: {value}")
+        for key, value in sortedTFIDF.items():
+            print(f"{key}: {value}")
 
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
