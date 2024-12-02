@@ -8,7 +8,7 @@
 - GUI implementation
 - figure out way to implement the proper way of finding intersections (starting with smallest set) -- tristan
 - MAIN PRIORITY:
-    KEEP THINKING OF WAYS TO MAKE IT FASTER (RN ~3 for "crista lopes")
+    KEEP THINKING OF WAYS TO MAKE IT FASTER (RN ~3.4 for "crista lopes")
 
 
 ## Setup
