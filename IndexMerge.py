@@ -83,7 +83,7 @@ class IndexMerge:
         ]
 
         # set the numbers of processes to do
-        num_processes = 6  # amount cores current device have
+        num_processes = 6 
         chunk_size = len(files) // num_processes + (len(files) % num_processes > 0)
         file_chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
 
