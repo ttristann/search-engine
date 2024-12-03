@@ -17,9 +17,6 @@ from nltk.stem import SnowballStemmer
 from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
-
-
-
 def writer_thread_worker(writer_thread_queue):
     while True:
         thread = writer_thread_queue.get()
