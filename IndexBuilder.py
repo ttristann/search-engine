@@ -196,7 +196,7 @@ def build_index(folder_path):
 
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    folder_path = Path('ANALYST')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
