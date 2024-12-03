@@ -4,6 +4,7 @@ from collections import defaultdict
 from IndexMerge import IndexMerge
 from IndexBuilder import IndexBuilder
 from nltk.stem import SnowballStemmer
+from Scoring import Scoring
 
 
 """
@@ -25,6 +26,9 @@ class SearchQuery:
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
         self.query_results = list()
+
+    def get_smaller_index(self):
+        return self.smaller_index
 
     def tokenize_query(self):
         """
@@ -119,12 +123,12 @@ class SearchQuery:
                 discovered_urls.add(url)
                 count += 1
             index += 1
-            if count >= 5: break
+            if count >= 10: break
 
 
 if __name__ == "__main__":
-    mac_path = 'DEV'
-    win_path = 'develper/DEV'
+    mac_path = 'ANALYST' #DEV
+    # win_path = 'develper/DEV'
 
     time_start = time.time()
 
@@ -136,16 +140,40 @@ if __name__ == "__main__":
     time_end = time.time()
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    scores = Scoring()
     
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
-        search = SearchQuery(query_text)
-        search.tokenize_query()
-        search.create_smaller_index() # can use time to track how long it takes for the smaller index to be created
+        search = SearchQuery(query_text) # initializes SearchQuery object
+        search.tokenize_query()  # # stems search query words. ex: lopes --> lope
+        search.create_smaller_index() # 
         search.match_search_query(docId_dict)
         print("Here are the top 5 results: ")
+
+        #new dictionary --> {docID: tf-idf}
+        #smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
+        #tf-idf =  1 + log()
+
+
         search.get_top5_urls()
+        # print(search.get_smaller_index())
+        sortedTFIDF = {}
+
+        # print(search.get_smaller_index().keys())
+        # {"cristina": [["docID", "tf]"]}
+        
+        for key, value in search.get_smaller_index().items():
+            # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
+            # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
+            for pair in value:
+
+                sortedTFIDF[pair[0]] = scores.tf_idf(pair[1], len(docId_dict), len(search.get_smaller_index()[key]))
+
+            
+        sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
+        for key, value in sortedTFIDF.items():
+            print(f"{key}: {value}")
+
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-
