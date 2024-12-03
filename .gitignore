@@ -4,6 +4,9 @@ ANALYST/
 developer/
 analyst/
 __pycache__/
+ANALYST/
+DEV/
+.idea/
 
 # Ignore batch output files
 Output_batch_*.txt 
