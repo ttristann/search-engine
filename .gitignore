@@ -1,5 +1,6 @@
 # Directories to Ignore
 DEV/
+ANALYST/
 developer/
 analyst/
 __pycache__/
