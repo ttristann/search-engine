@@ -3,7 +3,6 @@ import math
 
 class Scoring:
 
-
     def __init__(self):
         self.term_counts = {} #{term, {DocID, count}} ????
 
@@ -18,5 +17,6 @@ class Scoring:
     def inverse_document_frequency(self, N, DF): # afterward creating index
         return math.log10(N / DF)
     
-    def tf_idf(self): # afterward creating index
-        pass
+    def tf_idf(self, tf, N, DF): # afterward creating index
+        # 1 + log(TF) * log(N / DF)
+        return self.term_frequency(tf) * self.inverse_document_frequency(N, DF)

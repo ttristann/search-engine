@@ -161,6 +161,8 @@ if __name__ == "__main__":
         sortedTFIDF = {}
 
         # print(search.get_smaller_index().keys())
+        # {"cristina": [["docID", "tf]"]}
+        
         for key, value in search.get_smaller_index().items():
             # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
             # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
