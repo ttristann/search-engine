@@ -1,11 +1,15 @@
 # Search Engine(M1) - Inverted Index
 
 ## TODO:
-- MAIN PROIRITY - MAKE SCRIPTS TO MAKE THE REPORT
-- Make it more efficient, try out multi-processing instead of multi-threading - current standing 110 min/500 mb
-- Check and Remove Duplicate url with the same content (use simhash for next milestone)
-- Need to merge output batch files into one file, can make a separate class to do so
-- Try to import project to openlab to check the if program is more efficient there compared to local devices
+- Identify important words -- Axel
+- Check unique docId count --> docId_to_url dictionary has 54643, unique docID count has 53985
+- SIMHASH implementation
+- tf-idf, maybe wih the cosine implementation
+- GUI implementation
+- figure out way to implement the proper way of finding intersections (starting with smallest set) -- tristan
+- MAIN PRIORITY:
+    KEEP THINKING OF WAYS TO MAKE IT FASTER (RN ~2.37 for "crista lopes")
+
 
 ## Setup
 1. Clone repository ```git clone https://github.com/ttristann/search-engine.git```
