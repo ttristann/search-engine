@@ -7,6 +7,11 @@
 - tf-idf implementation
 - GUI implementation
 - Convert IndexBuilder.py into a class object, have a getter for retrieving the index after creation so we don't have to build it over and over again in SearchQuery.py
+- MAIN PRIORITY:
+    make indexmerge way faster
+    - instead of having each thread loop all over the six output batch files all over again
+    - director assigns to have each thread just assigned to one file
+    - then director merges it together and have it ranked by tf-idf
 
 
 ## Setup

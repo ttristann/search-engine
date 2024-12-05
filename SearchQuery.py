@@ -61,6 +61,7 @@ class SearchQuery:
         IndexMerge.py to create a smaller index that
         only contains the tokens from the search query. 
         """
+        start_time = time.time()
         query_tokens = self.get_query_tokens()
         # instantiates an IndexMerge object 
         indexMerge = IndexMerge(query_tokens)
@@ -68,6 +69,8 @@ class SearchQuery:
         indexMerge.merge_index('.')
         # assigns/updates attribute to be used in another function
         self.smaller_index = indexMerge.get_query_index()
+        end_time = time.time()
+        print(f"Finished create_smaller_index in: {end_time - start_time} seconds...")
 
     def get_smaller_index(self):
         """
@@ -84,6 +87,7 @@ class SearchQuery:
         or documents based on tf-idf score that is assigned
         with each posting in the inverted index. 
         """
+        start_time = time.time()
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
         # compiles all of the postings into one list
@@ -112,6 +116,7 @@ class SearchQuery:
 
         self.query_results = list_of_urls
 
+
     def get_top5_urls(self):
         # prints the top 5 urls that matches to the search query
         discovered_urls = set()
@@ -127,7 +132,7 @@ class SearchQuery:
 
 
 if __name__ == "__main__":
-    mac_path = 'ANALYST' #DEV
+    mac_path = 'DEV' #DEV
     # win_path = 'develper/DEV'
 
     time_start = time.time()
@@ -156,24 +161,24 @@ if __name__ == "__main__":
         #tf-idf =  1 + log()
 
 
-        search.get_top5_urls()
-        # print(search.get_smaller_index())
-        sortedTFIDF = {}
+        # search.get_top5_urls()
+        # # print(search.get_smaller_index())
+        # sortedTFIDF = {}
 
-        # print(search.get_smaller_index().keys())
-        # {"cristina": [["docID", "tf]"]}
+        # # print(search.get_smaller_index().keys())
+        # # {"cristina": [["docID", "tf]"]}
         
-        for key, value in search.get_smaller_index().items():
-            # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
-            # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
-            for pair in value:
+        # for key, value in search.get_smaller_index().items():
+        #     # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
+        #     # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
+        #     for pair in value:
 
-                sortedTFIDF[pair[0]] = scores.tf_idf(pair[1], len(docId_dict), len(search.get_smaller_index()[key]))
+        #         sortedTFIDF[pair[0]] = scores.tf_idf(pair[1], len(docId_dict), len(search.get_smaller_index()[key]))
 
             
-        sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
-        for key, value in sortedTFIDF.items():
-            print(f"{key}: {value}")
+        # sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
+        # for key, value in sortedTFIDF.items():
+        #     print(f"{key}: {value}")
 
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
