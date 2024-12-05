@@ -1,4 +1,6 @@
 # Directories to Ignore
+DEV/
+ANALYST/
 developer/
 analyst/
 __pycache__/
@@ -11,5 +13,4 @@ Output_batch_*.txt
 smaller_index.txt
 docID_to_URL.txt
 
-# practice to experiment with
-scratch.py 
+.DS_Store

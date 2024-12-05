@@ -4,11 +4,9 @@
 - Identify important words -- Axel
 - Check unique docId count --> docId_to_url dictionary has 54643, unique docID count has 53985
 - SIMHASH implementation
-- tf-idf, maybe wih the cosine implementation
+- tf-idf implementation
 - GUI implementation
-- figure out way to implement the proper way of finding intersections (starting with smallest set) -- tristan
-- MAIN PRIORITY:
-    KEEP THINKING OF WAYS TO MAKE IT FASTER (RN ~2.37 for "crista lopes")
+- Convert IndexBuilder.py into a class object, have a getter for retrieving the index after creation so we don't have to build it over and over again in SearchQuery.py
 
 
 ## Setup

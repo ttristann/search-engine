@@ -128,11 +128,3 @@ if __name__ == "__main__":
     time_end= time.time() # end the timer for creating report
 
     print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
-
-
-                            
-
-
-    
-
-    
