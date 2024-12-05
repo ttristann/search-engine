@@ -1,7 +1,7 @@
 import re
 import time
 from collections import defaultdict
-from IndexMerge import IndexMerge
+from IndexMerge import IndexMerge, open_batch_files
 from IndexBuilder import IndexBuilder
 from nltk.stem import SnowballStemmer
 from Scoring import Scoring
@@ -55,7 +55,7 @@ class SearchQuery:
 
         return self.query_tokens
     
-    def create_smaller_index(self):
+    def create_smaller_index(self, opened_files):
         """
         Uses the imported IndexMerge class from the
         IndexMerge.py to create a smaller index that
@@ -65,7 +65,7 @@ class SearchQuery:
         # instantiates an IndexMerge object 
         indexMerge = IndexMerge(query_tokens)
         # creates an smaller index
-        indexMerge.merge_index('.')
+        indexMerge.merge_index(opened_files)
         # assigns/updates attribute to be used in another function
         self.smaller_index = indexMerge.get_query_index()
 
@@ -127,7 +127,7 @@ class SearchQuery:
 
 
 if __name__ == "__main__":
-    mac_path = 'ANALYST' #DEV
+    mac_path = 'DEV'
     # win_path = 'develper/DEV'
 
     time_start = time.time()
@@ -142,12 +142,13 @@ if __name__ == "__main__":
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
     scores = Scoring()
     
+    opened_files = open_batch_files()
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
         search = SearchQuery(query_text) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        search.create_smaller_index() # 
+        search.create_smaller_index(opened_files) # 
         search.match_search_query(docId_dict)
         print("Here are the top 5 results: ")
 

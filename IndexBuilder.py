@@ -8,6 +8,7 @@ import threading
 import queue
 import math
 import multiprocessing
+import glob
 
 from collections import defaultdict
 from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
@@ -200,9 +201,29 @@ class IndexBuilder:
 
     def get_docId_to_url(self):
         return self.docId_to_url
+    
+    # def open_batch_files(self):
+    #     """
+    #     Opens up all of the Output Batch files that
+    #     were created to avoid reopening them in
+    #     other functions to save time. 
+
+    #     TODO: remember to close files after
+    #     the search query has been processed and
+    #     outputted results
+    #     """
+    #     file_pattern = "Output_Batch_*.txt"
+    #     files = glob.glob(file_pattern)
+    #     files_list = list()
+    #     start_time = time.time()
+    #     for file in files:
+    #         f = open(file, "r")
+    #         files_list.append(f)
+    #     end_time = time.time()
+    #     return files_list
 
 if __name__ == "__main__":
-    folder_path = Path('ANALYST')
+    folder_path = Path('DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -211,6 +232,7 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer for index
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    index_builder.open_batch_files()
 
     # time_start_2 = time.time() # start the timer for creating report
     # report_creation('.')

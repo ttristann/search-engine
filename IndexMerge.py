@@ -3,6 +3,7 @@ from multiprocessing import Process, Manager, Pool
 import os, json
 import heapq
 import time
+import glob
 
 
 """
@@ -23,13 +24,31 @@ The smaller index will have the format:
         ...
     }
 """
+def open_batch_files():
+    """
+    Opens all Output Batch files and reads their content into memory.
+
+    TODO: remeber to close these files once program is terminated
+    """
+    file_pattern = "Output_Batch_*.txt"
+    files = glob.glob(file_pattern)
+    opened_files = []
+    start_time = time.time()
+    for file in files:
+        f = open(file, "r")
+        opened_files.append(f)
+    end_time = time.time()
+    print(f"Files loaded in {end_time - start_time:.2f} seconds.")
+    return opened_files
+
+
 class IndexMerge:
     def __init__(self, query_tokens:list):
         self.query_tokens = query_tokens
         self.query_index = defaultdict(list)
 
     @staticmethod
-    def _process_files(file_list, query_tokens):
+    def _process_files(file_objects, query_tokens):
         """
         A helper function that is called for each process 
         that are being executed in parallel using the 
@@ -38,32 +57,28 @@ class IndexMerge:
         It opens up Output_Batch text files to accumulate 
         tokens that are going part of the search query. 
         """
-        local_query_index = dict()
+        local_query_index = {}
 
-        # iterates only through a subset of the Output Batch files
-        for file_path in file_list:
+        for file_obj in file_objects:
             try:
-                with open(file_path, "r", encoding="utf-8") as current_file:
-                    content = json.load(current_file)
-                    # filter and accumulate tokens relevant to the query
-                    for q_token in query_tokens:
-                        # accesses the current and new postings to be combined
-                        current_posting = local_query_index.get(q_token, [])
-                        new_posting = content.get(q_token, [])
-                        if not new_posting:
-                            continue # skips to the next token if current token is not present
-                        combined_posting = current_posting + new_posting # postings are merged into one
-                        local_query_index[q_token] = sorted(combined_posting, key=lambda x: x[0])
-
+                # Load JSON content directly from the file object
+                content = json.load(file_obj)
+                for q_token in query_tokens:
+                    current_posting = local_query_index.get(q_token, [])
+                    new_posting = content.get(q_token, [])
+                    if not new_posting:
+                        continue  # Skip if the token is not present
+                    combined_posting = current_posting + new_posting
+                    local_query_index[q_token] = sorted(combined_posting, key=lambda x: x[0])
             except json.JSONDecodeError as e:
-                print(f"JSON decode error {e} in file {file_path}")
+                print(f"JSON decode error {e} in file {file_obj.name}")
             except Exception as e:
-                print(f"Unexpected error while processing {file_path}: {e}")
+                print(f"Unexpected error while processing {file_obj.name}: {e}")
 
         return local_query_index
 
 
-    def merge_index(self, main_directory):
+    def merge_index(self, opened_files):
         """
         Uses the multiprocessing library to create a 
         Manager object and multiple processes to make 
@@ -75,30 +90,23 @@ class IndexMerge:
         sorting them based on the docID, in ascending order. 
         """
 
-        # compile all of the output batch files
-        files = [
-            os.path.join(main_directory, file)
-            for file in os.listdir(main_directory)
-            if file.startswith("Output") and file.endswith(".txt")
-        ]
+        num_processes = 6
+        chunk_size = len(opened_files) // num_processes + (len(opened_files) % num_processes > 0)
+        file_chunks = [opened_files[i:i + chunk_size] for i in range(0, len(opened_files), chunk_size)]
 
-        # set the numbers of processes to do
-        num_processes = 6 
-        chunk_size = len(files) // num_processes + (len(files) % num_processes > 0)
-        file_chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
-
-        # establish pools that holds all of the processes that have their
-        # own output batch files to handle and create even smaller indexes 
+        # Process each chunk in parallel
         with Pool(processes=num_processes) as pool:
-            results = pool.starmap(self._process_files, [(chunk, self.query_tokens) for chunk in file_chunks])
+            results = pool.starmap(
+                self._process_files,
+                [(chunk, self.query_tokens) for chunk in file_chunks]
+            )
 
-        # merge results from all workers
+        # Merge results from all workers
         for partial_index in results:
             for token, postings in partial_index.items():
                 current_posting = self.query_index.get(token, [])
                 combined_posting = current_posting + postings
-                # updating the main small index
-                self.query_index[token] = list(sorted(combined_posting, key=lambda x: x[0]))
+                self.query_index[token] = sorted(combined_posting, key=lambda x: x[0])
 
         # ## testing purposes
         # with open("smaller_index.txt", "w") as smaller_index:
