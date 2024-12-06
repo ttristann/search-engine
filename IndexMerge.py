@@ -26,41 +26,45 @@ The smaller index will have the format:
 class IndexMerge:
     def __init__(self, query_tokens:list):
         self.query_tokens = query_tokens
-        self.query_index = defaultdict(list)
+        self.query_index = defaultdict(dict)
 
-    @staticmethod
-    def _process_files(file_list, query_tokens):
-        """
-        A helper function that is called for each process 
-        that are being executed in parallel using the 
-        multiprocessing library. 
+    # @staticmethod
+    # def _process_files(file_list, query_tokens):
+    #     """
+    #     A helper function that is called for each process 
+    #     that are being executed in parallel using the 
+    #     multiprocessing library. 
 
-        It opens up Output_Batch text files to accumulate 
-        tokens that are going part of the search query. 
-        """
-        local_query_index = dict()
+    #     It opens up Output_Batch text files to accumulate 
+    #     tokens that are going part of the search query. 
+    #     """
+    #     local_query_index = dict()
 
-        # iterates only through a subset of the Output Batch files
-        for file_path in file_list:
-            try:
-                with open(file_path, "r", encoding="utf-8") as current_file:
-                    content = json.load(current_file)
-                    # filter and accumulate tokens relevant to the query
-                    for q_token in query_tokens:
-                        # accesses the current and new postings to be combined
-                        current_posting = local_query_index.get(q_token, [])
-                        new_posting = content.get(q_token, [])
-                        if not new_posting:
-                            continue # skips to the next token if current token is not present
-                        combined_posting = current_posting + new_posting # postings are merged into one
-                        local_query_index[q_token] = sorted(combined_posting, key=lambda x: x[0])
+    #     # iterates only through a subset of the Output Batch files
+    #     for file_path in file_list:
+    #         try:
+    #             with open(file_path, "r", encoding="utf-8") as current_file:
+    #                 content = json.load(current_file)
+    #                 # filter and accumulate tokens relevant to the query
+    #                 for q_token in query_tokens:
+    #                     #q_token is the query token
+    #                     # accesses the current and new postings to be combined
+    #                     current_posting = local_query_index.get(q_token, [])
+    #                     new_posting = content.get(q_token, [])
+    #                     print(f"this is the currentPosting: {current_posting}")
+    #                     print(f"this is the new posting: {new_posting}")
+    #                     if not new_posting:
+    #                         continue # skips to the next token if current token is not present
+    #                     # combined_posting = current_posting + new_posting # postings are merged into one 
+    #                     local_query_index[q_token] = new_posting
+    #                     # local_query_index[q_token] = sorted(combined_posting, key=lambda x: x[0])
 
-            except json.JSONDecodeError as e:
-                print(f"JSON decode error {e} in file {file_path}")
-            except Exception as e:
-                print(f"Unexpected error while processing {file_path}: {e}")
+    #         except json.JSONDecodeError as e:
+    #             print(f"JSON decode error {e} in file {file_path}")
+    #         except Exception as e:
+    #             print(f"Unexpected error while processing {file_path}: {e}")
 
-        return local_query_index
+    #     return local_query_index
 
 
     def merge_index(self, main_directory):
@@ -75,30 +79,39 @@ class IndexMerge:
         sorting them based on the docID, in ascending order. 
         """
 
-        # compile all of the output batch files
-        files = [
-            os.path.join(main_directory, file)
-            for file in os.listdir(main_directory)
-            if file.startswith("Output") and file.endswith(".txt")
-        ]
+        for file in os.listdir(main_directory):
+            if file.startswith("Output") and file.endswith(".json"):
+                file_path = os.path.join(main_directory, file)
+                print(file_path)
+                # opening the Output_Batch text file itself
+                with open(file_path, "r", encoding="utf-8") as current_file:
+                    try:
+                        content = json.load(current_file)
+                        
+                        # iterates through the query_tokens rather than iterating through the whole
+                        # partial index and then check if token is in query_token --> more efficient
+                        #q_token = "cristina"
+                        for q_token in self.query_tokens:
+                            # access the current and new postings to be combined
+                            # current_posting = self.query_index.get(q_token, [])
+                            new_posting = content.get(q_token, [])
 
-        # set the numbers of processes to do
-        num_processes = 6 
-        chunk_size = len(files) // num_processes + (len(files) % num_processes > 0)
-        file_chunks = [files[i:i + chunk_size] for i in range(0, len(files), chunk_size)]
+                            if not new_posting: continue # skips if there is no new posting
 
-        # establish pools that holds all of the processes that have their
-        # own output batch files to handle and create even smaller indexes 
-        with Pool(processes=num_processes) as pool:
-            results = pool.starmap(self._process_files, [(chunk, self.query_tokens) for chunk in file_chunks])
+                            # merges and sort the current posting list with the newly loaded posting
+                            # print(f"This is the current posting: {current_posting}")
+                            # print(f"This is the new posting: {new_posting}")
+                            # combined_posting = current_posting + new_posting
+                            # merged_posting = sorted(combined_posting, key=lambda x: x[0])
+                            self.query_index[q_token].update(new_posting)
+                        # print(self.query_index)
 
-        # merge results from all workers
-        for partial_index in results:
-            for token, postings in partial_index.items():
-                current_posting = self.query_index.get(token, [])
-                combined_posting = current_posting + postings
-                # updating the main small index
-                self.query_index[token] = list(sorted(combined_posting, key=lambda x: x[0]))
+                    except json.JSONDecodeError as e:
+                        print(f"The error {e} has occured when processing {file}")
+                    except KeyError as e:
+                        print(f"Token {e} missing in file {file}. Skipping.")
+                    except Exception as e:
+                        print(f"Unexpected error while processing {file}: {e}")
 
         # ## testing purposes
         # with open("smaller_index.txt", "w") as smaller_index:
