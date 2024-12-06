@@ -88,7 +88,23 @@ class SearchQuery:
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
         # compiles all of the postings into one list
-        postings_list = [smaller_index[key] for key in smaller_index]
+        # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
+        # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
+        postings_list = dict() # dictionary
+
+        # this does not necessarily find the intersection between each.:(
+        for key, value in smaller_index.items():
+            for key1 in value:
+                # print(f"this is the value being added: {key1}")
+                if key not in postings_list:
+                    postings_list[key] = set()
+                    postings_list[key].add(key1)
+                else:
+                    postings_list[key].add(key1)
+
+        print(f"this is the postings list: {postings_list}")
+        return
+
         # this is to collect the sets of docID each token has
         docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
         # finds the intersectiong docID
@@ -136,11 +152,8 @@ if __name__ == "__main__":
 
     time_start = time.time()
 
-    # instantiates an IndexBuilder object and creates the inverted index
-    indexBuilder = IndexBuilder(win_path)
-    indexBuilder.build_index()
-    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
-    
+    docId_dict = IndexBuilder("developer/DEV")
+    docId_dict.build_index()
     time_end = time.time()
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")

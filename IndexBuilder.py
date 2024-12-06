@@ -76,6 +76,13 @@ class IndexBuilder:
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
+    
+    def retrieve_important_words(self,soup_obj):
+        important_words = dict()
+        if (soup_obj.find('title')):
+            title = soup_obj.find('title').get_text()
+            important_words[title] = title
+
 
     def build_index(self):
         """
@@ -90,9 +97,8 @@ class IndexBuilder:
                 ...
             }
         """
-        processes = [] # list of all started processes
-
-        main_index = defaultdict(list) # Our main inverted index
+        main_index = defaultdict(dict) # Our main inverted index
+        # final_dict = defaultdict(defaultdict)
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
         docId = 1 # unique identifier for each document, incremented by 1 for each file
         batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
@@ -139,6 +145,8 @@ class IndexBuilder:
                     # removes all <script> and <style> tags
                     for tag_element in soup_obj.find_all(['script', 'style']):  
                         tag_element.extract()
+                    
+                    important_words = retrieve_important_words(soup_obj)
                     if(soup_obj.find('title')):
                         soup_obj.find('title').decompose() #remove title header, makes word count more accurate
                     # remove title from text data, analyze code. Many words are being mashed together. Axel
@@ -202,7 +210,8 @@ class IndexBuilder:
         return self.docId_to_url
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    # folder_path = Path('analyst/ANALYST')
+    folder_path = Path('developer/DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
