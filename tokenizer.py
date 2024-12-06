@@ -1,4 +1,6 @@
 from collections import defaultdict
+from nltk.tokenize import RegexpTokenizer
+
 """
 Tokenizer class that takes in a string of text 
 that has been filtered through by Beautiful Soup
@@ -21,19 +23,26 @@ class Tokenizer:
         then checks if the resulting token meets the 
         condition to be a valid one. 
         """
-        current_token = []
-        for char in main_text:
-            if ('A' <= char <='Z') or ('a' <= char <= 'z') or ('0' <= char <= '9'): # checking for alphanumeric value
-                    current_token.append(char.lower()) # normalizes it
-            else:
-                if current_token and len(current_token) >= 3:
-                    combined = ''.join(current_token)
-                    yield combined
-                current_token = [] # resets it to make a new token
+        # initializes the tokenizer
+        tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
+        tokens_list = tokenizer.tokenize(main_text)
+        return tokens_list
+    
+        # current_token = []
+        # for char in main_text:
+        #     if ('A' <= char <='Z') or ('a' <= char <= 'z') or ('0' <= char <= '9'): # checking for alphanumeric value
+        #             current_token.append(char.lower()) # normalizes it
+        #     else:
+        #         if current_token and len(current_token) >= 3:
+        #             combined = ''.join(current_token)
+        #             yield combined
+        #         current_token = [] # resets it to make a new token
 
-        if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
-            combined = ''.join(current_token)
-            yield combined
+        # if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
+        #     combined = ''.join(current_token)
+        #     yield combined
+
+
 
     def compute_frequencies(self, tokens):
         """

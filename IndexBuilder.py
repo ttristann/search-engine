@@ -13,7 +13,7 @@ from collections import defaultdict
 from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
-from nltk.stem import SnowballStemmer
+from nltk.stem import PorterStemmer
 from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
@@ -71,7 +71,7 @@ class IndexBuilder:
         # creates the posting for the inverted index entries 
         # for the words present in the current file
         for token, frequency in ordered_tokens.items():
-            stemmed_token = SnowballStemmer("english").stem(token) # stemming the token
+            stemmed_token = PorterStemmer().stem(token) # stemming the token
             current_entry = (docId, frequency)
             temp_index[stemmed_token].append(current_entry)
         
@@ -169,7 +169,7 @@ class IndexBuilder:
 
                         # Sort and Write the current batch to disk   
                         main_index = self._sort_index(main_index)
-                        writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
+                        writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                         
                         main_index = defaultdict(list) # reset the main index
                         tasks_per_batch = [] # reset the tasks list
@@ -185,10 +185,10 @@ class IndexBuilder:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
                 main_index = self._sort_index(main_index)
-                writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
+                writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         
-        writer_thread_queue.put((docId_to_url_builder, "docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
+        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()
