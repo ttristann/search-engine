@@ -93,7 +93,8 @@ class IndexBuilder:
         """
         processes = [] # list of all started processes
 
-        main_index = defaultdict(list) # Our main inverted index
+        main_index = defaultdict(dict) # Our main inverted index
+        # final_dict = defaultdict(defaultdict)
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
         docId = 1 # unique identifier for each document, incremented by 1 for each file
         batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
@@ -164,14 +165,22 @@ class IndexBuilder:
                         for task in tasks_per_batch:
                             partial_index, task_docId_mapping = task.get() # get the partial index from the task
                             for word, postings in partial_index.items():
-                                main_index[word] += postings
+                                # print(f"this is the word: {word}, this is the postings: {postings}")
+                                # main_index[word] += postings
+                                if word not in main_index:
+                                    main_index[word] = {postings[0][0]: postings[0][1]}
+                                else:
+                                    main_index[word][postings[0][0]] = postings[0][1]
+
+
                             docId_to_url_builder.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                         batchCount += 1 # increment the batch count
-
+                        
                         # Sort and Write the current batch to disk   
-                        main_index = self._sort_index(main_index)
+                        # main_index = self._sort_index(main_index)
                         writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
                         
+                        # print(f"this is the main Index: {main_index}")
                         main_index = defaultdict(list) # reset the main index
                         tasks_per_batch = [] # reset the tasks list
 
@@ -179,14 +188,27 @@ class IndexBuilder:
             for task in tasks_per_batch:
                 partial_index, task_docId_mapping = task.get()
                 for word, postings in partial_index.items():
-                    main_index[word].extend(postings)
+                    # print(f"this is the word: {word}, this is the postings: {postings}")
+                    # main_index[word].extend(postings)
+                    if word not in main_index:
+                        main_index[word] = {postings[0][0]: postings[0][1]}
+                    else:
+                        main_index[word][postings[0][0]] = postings[0][1]
                 docId_to_url_builder.update(task_docId_mapping)
 
             if main_index:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
-                main_index = self._sort_index(main_index)
-                writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
+                # main_index = self._sort_index(main_index)
+                # print(f"this is the main inde: {main_index}")
+                # main_index = {
+                #     word: dict(sorted(doc_count.items())) for word, doc_count in main_index.items()
+                # }
+
+                # writer_thread_queue.dump((main_index, f"Output_Batch_{batchCount}.json"))
+                with open(f"Output_Batch_{batchCount}.json", "w") as f:
+                    json.dump(main_index, f, indent=4)
+                
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         
         writer_thread_queue.put((docId_to_url_builder, "docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
