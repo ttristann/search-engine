@@ -97,15 +97,20 @@ class SearchQuery:
         # compiles all of the postings into one list
         # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
         # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
-        postings_list = set() # because sets
+        postings_list = dict() # dictionary
 
         # this does not necessarily find the intersection between each.:(
         for key, value in smaller_index.items():
             for key1 in value:
-                print(f"this is the value being added: {key1}")
-                postings_list.add(key1)
-        print(f"this is the postings list: {postings_list}")
+                # print(f"this is the value being added: {key1}")
+                if key not in postings_list:
+                    postings_list[key] = set()
+                    postings_list[key].add(key1)
+                else:
+                    postings_list[key].add(key1)
 
+        print(f"this is the postings list: {postings_list}")
+        # return
 
         # this is to collect the sets of docID each token has
         # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
