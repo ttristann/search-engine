@@ -3,6 +3,7 @@ import time
 import json
 from collections import defaultdict
 from IndexMerge import IndexMerge
+# from IndexBuilder import build_index
 from IndexBuilder import IndexBuilder
 from nltk.stem import PorterStemmer
 from nltk.tokenize import RegexpTokenizer
@@ -29,6 +30,13 @@ class SearchQuery:
         self.query_tokens = list()
         self.smaller_index = defaultdict(list)
         self.query_results = list()
+        self.queryResultsFrequencies = {} #{docID: {term: frequencie}}
+
+    def get_smaller_index(self):
+        return self.smaller_index
+    
+    def getQueryResults(self):
+        return self.query_results
 
     def tokenize_query(self):
         """
@@ -84,15 +92,36 @@ class SearchQuery:
         inside the smaller index to get the top 5 results
         or documents based on tf-idf score that is assigned
         with each posting in the inverted index. 
+
+        TO DO: NEED A MORE EFFICIENT WAY OF MATCHING
         """
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
+        print(f"this is the smaller index: {smaller_index}")
         # compiles all of the postings into one list
-        postings_list = [smaller_index[key] for key in smaller_index]
+        # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
+        # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
+        postings_list = dict() # dictionary
+
+        # this does not necessarily find the intersection between each.:(
+        for key, value in smaller_index.items():
+            for key1 in value:
+                # print(f"this is the value being added: {key1}")
+                if key not in postings_list:
+                    postings_list[key] = set()
+                    postings_list[key].add(key1)
+                else:
+                    postings_list[key].add(key1)
+
+        print(f"this is the postings list: {postings_list}")
+        # return
+
         # this is to collect the sets of docID each token has
-        docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
+        # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
+
         # finds the intersectiong docID
-        common_docIDs = set.intersection(*docID_sets)
+        # common_docIDs = set.intersection(*docID_sets)
+        print(f"this is the common DOCIDS: {postings_list}")
         # filters the postings_list to only the entries that have the common docIDs
         filtered_lists = [
             [(docID, freq) for docID, freq in lst if docID in common_docIDs]
@@ -127,7 +156,7 @@ class SearchQuery:
                 discovered_urls.add(url)
                 count += 1
             index += 1
-            if count >= 5: break
+            if count >= 10: break
 
 
 if __name__ == "__main__":
@@ -166,24 +195,23 @@ if __name__ == "__main__":
         search.match_search_query(docId_dict, True) # Set to true when we already built the docId_dict
         print("Here are the top 5 results: ")
         search.get_top5_urls()
-        # print(search.get_smaller_index())
         sortedTFIDF = {}
 
-        # print(search.get_smaller_index().keys())
-        # {"cristina": [["docID", "tf]"]}
-        
-        for key, value in search.get_smaller_index().items():
-            # print(len(search.get_smaller_index()[key])) # this is DF(Document Frequency)
-            # print("this is the size of smaller_index: ", search.get_smaller_index()[key].values())
-            for pair in value:
-
-                sortedTFIDF[pair[0]] = scores.tf_idf(pair[1], len(docId_dict), len(search.get_smaller_index()[key]))
-
-            
-        sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
+        # for key, value in search.get_smaller_index().items():
+        #     print(f"this is the key: {key}, This is the value: {value}")
+        #     for pair in value:
+        #         # smaller index formatted in --> dictionary{query: list[[docID: count of word in doc]]}
+        #         print(f"DOCID: {pair[0]}, TF: {scores.term_frequency(pair[1])}", end=" ")
+        #         print(f"IDF: {scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}", end=" ")
+        #         print(
+        #             f"TF-IDF: {scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))}")
+                
+                
+        #         sortedTFIDF[pair[0]] = scores.term_frequency(pair[1]) * scores.inverse_document_frequency(len(docId_dict), len(search.get_smaller_index()[key]))
+        # sortedTFIDF = dict(sorted(sortedTFIDF.items(), key=lambda item: item[1], reverse=True))
         # for key, value in sortedTFIDF.items():
         #     print(f"{key}: {value}")
 
+        # print(search.getQueryResults())
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-

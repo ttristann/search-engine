@@ -92,7 +92,8 @@ class IndexBuilder:
         """
         processes = [] # list of all started processes
 
-        main_index = defaultdict(list) # Our main inverted index
+        main_index = defaultdict(dict) # Our main inverted index
+        # final_dict = defaultdict(defaultdict)
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
         docId = 1 # unique identifier for each document, incremented by 1 for each file
         batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
@@ -163,14 +164,22 @@ class IndexBuilder:
                         for task in tasks_per_batch:
                             partial_index, task_docId_mapping = task.get() # get the partial index from the task
                             for word, postings in partial_index.items():
-                                main_index[word] += postings
+                                # print(f"this is the word: {word}, this is the postings: {postings}")
+                                # main_index[word] += postings
+                                if word not in main_index:
+                                    main_index[word] = {postings[0][0]: postings[0][1]}
+                                else:
+                                    main_index[word][postings[0][0]] = postings[0][1]
+
+
                             docId_to_url_builder.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                         batchCount += 1 # increment the batch count
-
+                        
                         # Sort and Write the current batch to disk   
                         main_index = self._sort_index(main_index)
                         writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                         
+                        # print(f"this is the main Index: {main_index}")
                         main_index = defaultdict(list) # reset the main index
                         tasks_per_batch = [] # reset the tasks list
 
@@ -178,7 +187,12 @@ class IndexBuilder:
             for task in tasks_per_batch:
                 partial_index, task_docId_mapping = task.get()
                 for word, postings in partial_index.items():
-                    main_index[word].extend(postings)
+                    # print(f"this is the word: {word}, this is the postings: {postings}")
+                    # main_index[word].extend(postings)
+                    if word not in main_index:
+                        main_index[word] = {postings[0][0]: postings[0][1]}
+                    else:
+                        main_index[word][postings[0][0]] = postings[0][1]
                 docId_to_url_builder.update(task_docId_mapping)
 
             if main_index:
