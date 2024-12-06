@@ -74,7 +74,7 @@ class SearchQuery:
         # instantiates an IndexMerge object 
         indexMerge = IndexMerge(query_tokens)
         # creates an smaller index
-        indexMerge.merge_index('.')
+        indexMerge.merge_index('IndexContent/')
         # assigns/updates attribute to be used in another function
         self.smaller_index = indexMerge.get_query_index()
 
@@ -97,7 +97,7 @@ class SearchQuery:
         """
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
-        print(f"this is the smaller index: {smaller_index}")
+        # print(f"this is the smaller index: {smaller_index}")
         # compiles all of the postings into one list
         # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
         # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
@@ -113,8 +113,8 @@ class SearchQuery:
                 else:
                     postings_list[key].add(key1)
 
-        print(f"this is the postings list: {postings_list}")
-        # return
+        # print(f"this is the postings list: {postings_list}")
+        return
 
         # this is to collect the sets of docID each token has
         # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
@@ -166,9 +166,9 @@ if __name__ == "__main__":
     time_start = time.time()
 
     # instantiates an IndexBuilder object and creates the inverted index
-    indexBuilder = IndexBuilder(win_path)
-    indexBuilder.build_index()
-    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    # indexBuilder = IndexBuilder(win_path)
+    # indexBuilder.build_index()
+    # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
     time_end = time.time()
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     scores = Scoring()
     built_docId_dict = {}
 
-    with open("docID_to_URL.txt", "r") as f:
+    with open("IndexContent/docID_to_URL.txt", "r") as f:
         built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
     
     # c = 0
@@ -189,10 +189,13 @@ if __name__ == "__main__":
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
+
         search = SearchQuery(query_text) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
         search.create_smaller_index() # 
-        search.match_search_query(docId_dict, True) # Set to true when we already built the docId_dict
+
+        search.match_search_query(built_docId_dict, True) # Set to true when we already built the docId_dict
+
         print("Here are the top 5 results: ")
         search.get_top5_urls()
         sortedTFIDF = {}

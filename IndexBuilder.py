@@ -175,8 +175,8 @@ class IndexBuilder:
                             docId_to_url_builder.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                         batchCount += 1 # increment the batch count
                         
-                        # Sort and Write the current batch to disk   
-                        main_index = self._sort_index(main_index)
+                        # Sort and Write the current batch to disk  
+                        # main_index = self._sort_index(main_index) # (commented out for now since we changed the structure of the inverted index) 
                         writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                         
                         # print(f"this is the main Index: {main_index}")
@@ -198,7 +198,7 @@ class IndexBuilder:
             if main_index:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
-                main_index = self._sort_index(main_index)
+                # main_index = self._sort_index(main_index)
                 writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         

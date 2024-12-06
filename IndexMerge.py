@@ -80,9 +80,9 @@ class IndexMerge:
         """
 
         for file in os.listdir(main_directory):
-            if file.startswith("Output") and file.endswith(".json"):
+            if file.startswith("Output") and file.endswith(".txt"):
                 file_path = os.path.join(main_directory, file)
-                print(file_path)
+                # print(file_path)
                 # opening the Output_Batch text file itself
                 with open(file_path, "r", encoding="utf-8") as current_file:
                     try:
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     query_tokens = ["crista lopes"]
     small_index = IndexMerge(query_tokens)
     time_start= time.time() # start the timer for creating report
-    small_index.merge_index(".")
+    small_index.merge_index("IndexContent/")
     time_end= time.time() # end the timer for creating report
 
     print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
