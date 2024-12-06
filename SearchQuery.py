@@ -98,7 +98,7 @@ class SearchQuery:
         # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
         # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
         postings_list = dict() # dictionary
-
+        sort_order = dict()
         # this does not necessarily find the intersection between each.:(
         for key, value in smaller_index.items():
             for key1 in value:
@@ -108,9 +108,22 @@ class SearchQuery:
                     postings_list[key].add(key1)
                 else:
                     postings_list[key].add(key1)
+            sort_order[key] = len(postings_list[key])
 
-        print(f"this is the postings list: {postings_list}")
+        # print(f"this is the postings list: {postings_list}")
+        # print(f"this is the sorted order: {sort_order}")
         # return
+        sort_dict = dict(sorted(sort_order.items(), key=lambda item: item[1]))
+        print(f"this is the sorted dict: {sort_dict}")
+        intersect = set()
+        for key, value in sort_dict.items():
+            print(f"this is the key: {key}")
+            if len(intersect) == 0:
+                intersect = postings_list[key] #returns all docID's where word is present
+            else:
+                intersect = intersect.intersection(postings_list[key])
+        print(f"this is the intersection: {intersect}")
+        return
 
         # this is to collect the sets of docID each token has
         # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
