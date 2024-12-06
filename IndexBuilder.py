@@ -14,7 +14,7 @@ from collections import defaultdict
 from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
 from tokenizer import Tokenizer
 from pathlib import Path
-from nltk.stem import SnowballStemmer
+from nltk.stem import PorterStemmer
 from ReportCreation import report_creation
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
@@ -72,11 +72,18 @@ class IndexBuilder:
         # creates the posting for the inverted index entries 
         # for the words present in the current file
         for token, frequency in ordered_tokens.items():
-            stemmed_token = SnowballStemmer("english").stem(token) # stemming the token
+            stemmed_token = PorterStemmer().stem(token) # stemming the token
             current_entry = (docId, frequency)
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
+    
+    def retrieve_important_words(self,soup_obj):
+        important_words = dict()
+        if (soup_obj.find('title')):
+            title = soup_obj.find('title').get_text()
+            important_words[title] = title
+
 
     def build_index(self):
         """
@@ -91,8 +98,6 @@ class IndexBuilder:
                 ...
             }
         """
-        processes = [] # list of all started processes
-
         main_index = defaultdict(dict) # Our main inverted index
         # final_dict = defaultdict(defaultdict)
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
@@ -141,6 +146,8 @@ class IndexBuilder:
                     # removes all <script> and <style> tags
                     for tag_element in soup_obj.find_all(['script', 'style']):  
                         tag_element.extract()
+                    
+                    important_words = retrieve_important_words(soup_obj)
                     if(soup_obj.find('title')):
                         soup_obj.find('title').decompose() #remove title header, makes word count more accurate
                     # remove title from text data, analyze code. Many words are being mashed together. Axel
@@ -177,8 +184,8 @@ class IndexBuilder:
                         batchCount += 1 # increment the batch count
                         
                         # Sort and Write the current batch to disk   
-                        # main_index = self._sort_index(main_index)
-                        writer_thread_queue.put((main_index, f"Output_Batch_{batchCount}.txt"))
+                        main_index = self._sort_index(main_index)
+                        writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                         
                         # print(f"this is the main Index: {main_index}")
                         main_index = defaultdict(list) # reset the main index
@@ -199,19 +206,11 @@ class IndexBuilder:
             if main_index:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
-                # main_index = self._sort_index(main_index)
-                # print(f"this is the main inde: {main_index}")
-                # main_index = {
-                #     word: dict(sorted(doc_count.items())) for word, doc_count in main_index.items()
-                # }
-
-                # writer_thread_queue.dump((main_index, f"Output_Batch_{batchCount}.json"))
-                with open(f"Output_Batch_{batchCount}.json", "w") as f:
-                    json.dump(main_index, f, indent=4)
-                
+                main_index = self._sort_index(main_index)
+                writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         
-        writer_thread_queue.put((docId_to_url_builder, "docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
+        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()
@@ -245,7 +244,8 @@ class IndexBuilder:
     #     return files_list
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    # folder_path = Path('analyst/ANALYST')
+    folder_path = Path('developer/DEV')
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
