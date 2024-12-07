@@ -74,7 +74,7 @@ class SearchQuery:
         # instantiates an QueryIndex object 
         query_index = QueryIndex(query_tokens)
         # creates an smaller index
-        query_index.merge_index('IndexContent/')
+        query_index.build_query_index('IndexContent/')
         # assigns/updates attribute to be used in another function
         self.smaller_index = query_index.get_query_index()
 

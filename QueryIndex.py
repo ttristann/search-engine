@@ -75,7 +75,7 @@ class QueryIndex:
         # print(self.query_index)
 
 
-    def merge_index(self, main_directory):
+    def build_query_index(self, main_directory):
         """
         Uses the multiprocessing library to create a 
         Manager object and multiple processes to make 

@@ -81,7 +81,7 @@ class IndexBuilder:
         for token, frequency in ordered_tokens.items():
             stemmed_token = PorterStemmer().stem(token) # stemming the token
             weight = important_words.get(token, 0) # retrieves the weight of the token if it's an important word, otherwise defaults to 0
-            current_entry = (docId, frequency, weight)
+            current_entry = (docId, frequency, weight) # Note: for files withmultiple types of importance (title, header, etc.), the highest weight will take precedence
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
@@ -127,7 +127,7 @@ class IndexBuilder:
             # Filter out the warnings that are not XMLParsedAsHTMLWarning or MarkupResemblesLocatorWarning
             warnings.simplefilter("always", XMLParsedAsHTMLWarning)
             warnings.simplefilter("always", MarkupResemblesLocatorWarning)
-            
+
             soup_obj = BeautifulSoup(html_content, "lxml")
 
             if any(issubclass(warn.category, (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning)) for warn in w):
@@ -147,6 +147,8 @@ class IndexBuilder:
                 ...
             }
         """
+        # Create IndexContent folder if it doesn't exist
+        Path("IndexContent").mkdir(parents=True, exist_ok=True)
 
         main_index = defaultdict(list) # Our main inverted index
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
@@ -195,9 +197,6 @@ class IndexBuilder:
                     # removes all <script> and <style> tags
                     for tag_element in soup_obj.find_all(['script', 'style']):  
                         tag_element.extract()
-                    if(soup_obj.find('title')):
-                        soup_obj.find('title').decompose() #remove title header, makes word count more accurate
-                    # remove title from text data, analyze code. Many words are being mashed together. Axel
                     
                     # gets the actual text inside the HTML file
                     raw_text = soup_obj.get_text(separator=" ", strip=True)
