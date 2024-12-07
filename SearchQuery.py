@@ -2,7 +2,7 @@ import re
 import time
 import json
 from collections import defaultdict
-from IndexMerge import IndexMerge
+from QueryIndex import QueryIndex
 # from IndexBuilder import build_index
 from IndexBuilder import IndexBuilder
 from nltk.stem import PorterStemmer
@@ -66,17 +66,17 @@ class SearchQuery:
     
     def create_smaller_index(self):
         """
-        Uses the imported IndexMerge class from the
-        IndexMerge.py to create a smaller index that
+        Uses the imported QueryIndex class from the
+        QueryIndex.py to create a smaller index that
         only contains the tokens from the search query. 
         """
         query_tokens = self.get_query_tokens()
-        # instantiates an IndexMerge object 
-        indexMerge = IndexMerge(query_tokens)
+        # instantiates an QueryIndex object 
+        query_index = QueryIndex(query_tokens)
         # creates an smaller index
-        indexMerge.merge_index('IndexContent/')
+        query_index.build_query_index('IndexContent/')
         # assigns/updates attribute to be used in another function
-        self.smaller_index = indexMerge.get_query_index()
+        self.smaller_index = query_index.get_query_index()
 
     def get_smaller_index(self):
         """
@@ -97,10 +97,28 @@ class SearchQuery:
         """
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
+        # print(f"this is the smaller index: {smaller_index}")
         # compiles all of the postings into one list
-        postings_list = [smaller_index[key] for key in smaller_index]
-        # this is to collect the sets of docID each token has 
-        docID_sets = [set(entry[2] for entry in posting) for posting in postings_list]
+        # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
+        # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
+        postings_list = dict() # dictionary
+
+        # this does not necessarily find the intersection between each.:(
+        # for key, value in smaller_index.items():
+        #     for key1 in value:
+        #         # print(f"this is the value being added: {key1}")
+        #         if key not in postings_list:
+        #             postings_list[key] = set()
+        #             postings_list[key].add(key1)
+        #         else:
+        #             postings_list[key].add(key1)
+
+        # print(f"this is the postings list: {postings_list}")
+        return
+
+        # this is to collect the sets of docID each token has
+        # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
+
         # finds the intersectiong docID
         common_docIDs = set.intersection(*docID_sets)
         # filters the postings_list to only the entries that have the common docIDs
@@ -145,9 +163,9 @@ if __name__ == "__main__":
     time_start = time.time()
 
     # instantiates an IndexBuilder object and creates the inverted index
-    indexBuilder = IndexBuilder(mac_path)
-    indexBuilder.build_index()
-    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    # indexBuilder = IndexBuilder(win_path)
+    # indexBuilder.build_index()
+    # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
     time_end = time.time()
 
