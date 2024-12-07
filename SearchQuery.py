@@ -2,7 +2,7 @@ import re
 import time
 import json
 from collections import defaultdict
-from IndexMerge import IndexMerge
+from QueryIndex import QueryIndex
 # from IndexBuilder import build_index
 from IndexBuilder import IndexBuilder
 from nltk.stem import PorterStemmer
@@ -66,17 +66,17 @@ class SearchQuery:
     
     def create_smaller_index(self):
         """
-        Uses the imported IndexMerge class from the
-        IndexMerge.py to create a smaller index that
+        Uses the imported QueryIndex class from the
+        QueryIndex.py to create a smaller index that
         only contains the tokens from the search query. 
         """
         query_tokens = self.get_query_tokens()
-        # instantiates an IndexMerge object 
-        indexMerge = IndexMerge(query_tokens)
+        # instantiates an QueryIndex object 
+        query_index = QueryIndex(query_tokens)
         # creates an smaller index
-        indexMerge.merge_index('IndexContent/')
+        query_index.merge_index('IndexContent/')
         # assigns/updates attribute to be used in another function
-        self.smaller_index = indexMerge.get_query_index()
+        self.smaller_index = query_index.get_query_index()
 
     def get_smaller_index(self):
         """
@@ -104,16 +104,16 @@ class SearchQuery:
         postings_list = dict() # dictionary
 
         # this does not necessarily find the intersection between each.:(
-        for key, value in smaller_index.items():
-            for key1 in value:
-                # print(f"this is the value being added: {key1}")
-                if key not in postings_list:
-                    postings_list[key] = set()
-                    postings_list[key].add(key1)
-                else:
-                    postings_list[key].add(key1)
+        # for key, value in smaller_index.items():
+        #     for key1 in value:
+        #         # print(f"this is the value being added: {key1}")
+        #         if key not in postings_list:
+        #             postings_list[key] = set()
+        #             postings_list[key].add(key1)
+        #         else:
+        #             postings_list[key].add(key1)
 
-        print(f"this is the postings list: {postings_list}")
+        # print(f"this is the postings list: {postings_list}")
         return
 
         # this is to collect the sets of docID each token has

@@ -10,7 +10,7 @@ import math
 import multiprocessing
 
 from collections import defaultdict
-from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning
+from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
 from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import PorterStemmer
@@ -116,11 +116,21 @@ class IndexBuilder:
         return important_words
     
     def should_skip_file(self, html_content):
+         """
+         Checks if the current file should be skipped
+
+         Skip Criteria:
+            - Any kind of warning raised during the parsing of the HTML content (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning, etc.)
+
+         """
          with warnings.catch_warnings(record=True) as w: # catch the warning
+            # Filter out the warnings that are not XMLParsedAsHTMLWarning or MarkupResemblesLocatorWarning
             warnings.simplefilter("always", XMLParsedAsHTMLWarning)
+            warnings.simplefilter("always", MarkupResemblesLocatorWarning)
+            
             soup_obj = BeautifulSoup(html_content, "lxml")
 
-            if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
+            if any(issubclass(warn.category, (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning)) for warn in w):
                 return True
             return False
     
@@ -254,7 +264,7 @@ class IndexBuilder:
         return self.docId_to_url
 
 if __name__ == "__main__":
-    folder_path = Path('analyst/ANALYST') # path to the folder containing all the JSON files
+    folder_path = Path('developer/DEV') # path to the folder containing all the JSON files
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
