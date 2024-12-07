@@ -75,7 +75,7 @@ class QueryIndex:
         # print(self.query_index)
 
 
-    def build_query_index(self, main_directory):
+    def build_query_index(self):
         """
         Uses the multiprocessing library to create a 
         Manager object and multiple processes to make 
@@ -91,34 +91,84 @@ class QueryIndex:
         specific file or output batch file. 
         """
 
-        files_to_process = [
-            os.path.join(main_directory, file)
-            for file in os.listdir(main_directory)
-            if file.startswith("Output") and file.endswith(".json")
-        ]
+        # files_to_process = [
+        #     os.path.join(main_directory, file)
+        #     for file in os.listdir(main_directory)
+        #     if file.startswith("Output") and file.endswith(".json")
+        # ]
         
-        with Pool() as pool:
-            smaller_indexes = pool.map(self._process_file, files_to_process)
+        # with Pool() as pool:
+        #     smaller_indexes = pool.map(self._process_file, files_to_process)
 
-        # print(f'SMALLER INDEX:\n')
-        # for index in smaller_indexes:
-        #     print(f'\tindex')
+        # # print(f'SMALLER INDEX:\n')
+        # # for index in smaller_indexes:
+        # #     print(f'\tindex')
         
-        self._merge_smaller_indexes(smaller_indexes)
+        # self._merge_smaller_indexes(smaller_indexes)
+
+        ####################################
+        category_folder = "IndexCategory"
+        for token in self.query_tokens:
+            category_name = token[0].lower()
+            category_path = os.path.join(category_folder, f"{category_name}.json")
+            # category_path = f"{category_folder}/{category_name}.json"
+            with open(category_path, 'r') as current_file:
+                content = json.load(current_file)
+                new_posting = content.get(token, [])
+                if not new_posting:
+                    continue
+                self.query_index[token].extend(new_posting)
+
+
+
 
     def get_query_index(self):
         """
         Returns the query index to be used 
         outside of the function or class. 
         """
-
-        return self.query_index
+        for token, postings in self.query_index.items():
+            count = 0
+            print(f'current token: {token}')
+            for posting in postings:
+                print(f"\t{posting}")
+                count += 1
+                if count == 10: break
 
 if __name__ == "__main__":
-    query_tokens = ["crista lopes"]
+    query_tokens = ["crista", "lope"]
+    words = [
+    'Apple',      # A
+    'Ball',       # B
+    'Cat',        # C
+    'Dog',        # D
+    'Elephant',   # E
+    'Fish',       # F
+    'Guitar',     # G
+    'House',      # H
+    'Igloo',      # I
+    'Jungle',     # J
+    'Kangaroo',   # K
+    'Lion',       # L
+    'Monkey',     # M
+    'Nest',       # N
+    'Orange',     # O
+    'Penguin',    # P
+    'Queen',      # Q
+    'Rabbit',     # R
+    'Snake',      # S
+    'Tiger',      # T
+    'Umbrella',   # U
+    'Violin',     # V
+    'Whale',      # W
+    'Xylophone',  # X
+    'Yacht',      # Y
+    'Zebra'       # Z
+]
+    lst = [word.lower() for word in words]
     small_index = QueryIndex(query_tokens)
     time_start= time.time() # start the timer for creating report
-    small_index.merge_index("IndexContent/")
+    small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
-
+    small_index.get_query_index()
     print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
