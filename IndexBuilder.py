@@ -26,6 +26,10 @@ class IndexBuilder:
         self.batchSize = batchSize # number of files to process before writing to disk, defaulted to 10,000 files per batch
     
     def _writer_thread_worker(self, writer_thread_queue):
+        """
+        Given a queue of writer threads, this function will write the partial index to disk by calling the 'write_to_disk' function
+        Every thread manages a separate batch of files to write to disk
+        """
         while True:
             thread = writer_thread_queue.get()
             if thread is None: break
@@ -33,12 +37,12 @@ class IndexBuilder:
             writer_thread_queue.task_done()
 
 
-    def _write_to_disk(self, main_index, output_file_path):
+    def _write_to_disk(self, partial_index, output_file_path):
         """
         Writes the main index to the output file
         """
         with open(output_file_path, 'w') as output_file:
-            json.dump(main_index, output_file, indent=2) # main index data is written to the output file in JSON format, easier for parsing later
+            json.dump(partial_index, output_file, indent=2) # main index data is written to the output file in JSON format, easier for parsing later
             # NOTE: will need to use json.load() to read the data back in later 
         print("\n-----------------------------------------------------")
         print(f"Output successfully written to {output_file_path}")
@@ -56,7 +60,11 @@ class IndexBuilder:
                         for word, entries in main_index.items()}
         return sorted_index
 
-    def _process_file(self, main_text, docId, url):
+    def _process_file(self, main_text, important_words, docId, url):
+        """
+        Tokenizes a document's text and creates a partial index for the document.
+        Additionally, creates a mapping of the given docId to it's URL for the document.
+        """
         temp_index = defaultdict(list) # temporary index to store the current batch's partial index
         # calls tokenizes and normalizes the words within the main text
         current_tokenizer = Tokenizer()
@@ -72,11 +80,50 @@ class IndexBuilder:
         # for the words present in the current file
         for token, frequency in ordered_tokens.items():
             stemmed_token = PorterStemmer().stem(token) # stemming the token
-            current_entry = (docId, frequency)
+            weight = important_words.get(token, 0) # retrieves the weight of the token if it's an important word, otherwise defaults to 0
+            current_entry = (docId, frequency, weight)
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
 
+    def retrieve_important_words(self, soub_obj):
+        """
+        Retrieves the important words from the HTML content and assigns a given weight to them.
+
+        Important Words Include...
+            - Title | Weight: 1
+            - Headers (h1,h2,h3) | Weight: 0.75
+            - Bolded Text (<stong>) | Weight: 0.50
+        """
+        important_words = dict()
+
+        # retrieves the title of the HTML content
+        title = soub_obj.find('title')
+        if title:
+            title_text = title.get_text()
+            important_words[title_text] = 1
+        
+        # retrieves the headers of the HTML content
+        for header in soub_obj.find_all(['h1', 'h2', 'h3']):
+            header_text = header.get_text()
+            important_words[header_text] = 0.75
+        
+        # retrieves the bolded text of the HTML content
+        for bold_text in soub_obj.find_all('strong'):
+            bold_text = bold_text.get_text()
+            important_words[bold_text] = 0.50
+        
+        return important_words
+    
+    def should_skip_file(self, html_content):
+         with warnings.catch_warnings(record=True) as w: # catch the warning
+            warnings.simplefilter("always", XMLParsedAsHTMLWarning)
+            soup_obj = BeautifulSoup(html_content, "lxml")
+
+            if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
+                return True
+            return False
+    
     def build_index(self):
         """
         takes in a folder path to access the folder that
@@ -91,12 +138,11 @@ class IndexBuilder:
             }
         """
 
-        main_index = defaultdict(dict) # Our main inverted index
+        main_index = defaultdict(list) # Our main inverted index
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
         writer_thread_queue = queue.Queue() # Queue to store all started threads
 
         docId = 1 # unique identifier for each document, incremented by 1 for each file
-        skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
         batchCount = 0 # counter to keep track of the batch number
 
         # Creating a single writer thread to write to disk
@@ -121,17 +167,18 @@ class IndexBuilder:
 
                     # using beautiful soup to parse the content
                     html_content = data.get("content")
-                    with warnings.catch_warnings(record=True) as w: # catch the warning
-                        warnings.simplefilter("always", XMLParsedAsHTMLWarning)
-                        soup_obj = BeautifulSoup(html_content, "lxml")
-
-                        if any(issubclass(warn.category, XMLParsedAsHTMLWarning) for warn in w):
-                            skip = True
-                    if skip:
-                        # print(f"\t Skipping {data.get("url")}")
-                        skip = False
+                    
+                    # Checks if the current file should be skipped due to an XMLParsedAsHTMLWarning - Could later update to include simhashing (?)
+                    if self.should_skip_file(html_content):
                         continue
+                    
+                    # Parse the HTML content
+                    soup_obj = BeautifulSoup(html_content, "lxml")
+                    
+                    # Retrieves the important words from the HTML content
+                    important_words = self.retrieve_important_words(soup_obj)
 
+                    # removes all comments from the HTML file
                     for comment in soup_obj.find_all(string = lambda string: isinstance(string, Comment)):
                         comment.extract()
 
@@ -148,7 +195,7 @@ class IndexBuilder:
                     # print(f"this is the main text: {main_text}")
 
                     # calls the process_file function, tokenizing the file's text and adding it to the main index
-                    task = pool.apply_async(self._process_file, args=(main_text, docId, data.get("url")))
+                    task = pool.apply_async(self._process_file, args=(main_text, important_words, docId, data.get("url")))
                     tasks_per_batch.append(task) # add task to the current batch
 
                     # updates the docID_dict to add the entry docId: url
@@ -164,17 +211,13 @@ class IndexBuilder:
                             for word, postings in partial_index.items():
                                 # print(f"this is the word: {word}, this is the postings: {postings}")
                                 # main_index[word] += postings
-                                if word not in main_index:
-                                    main_index[word] = {postings[0][0]: postings[0][1]}
-                                else:
-                                    main_index[word][postings[0][0]] = postings[0][1]
-
+                                main_index[word].extend(postings) # add the postings to the main index
 
                             docId_to_url_builder.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                         batchCount += 1 # increment the batch count
                         
                         # Sort and Write the current batch to disk  
-                        # main_index = self._sort_index(main_index) # (commented out for now since we changed the structure of the inverted index) 
+                        main_index = self._sort_index(main_index) # (commented out for now since we changed the structure of the inverted index) 
                         writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
                         
                         # print(f"this is the main Index: {main_index}")
@@ -186,11 +229,8 @@ class IndexBuilder:
                 partial_index, task_docId_mapping = task.get()
                 for word, postings in partial_index.items():
                     # print(f"this is the word: {word}, this is the postings: {postings}")
-                    # main_index[word].extend(postings)
-                    if word not in main_index:
-                        main_index[word] = {postings[0][0]: postings[0][1]}
-                    else:
-                        main_index[word][postings[0][0]] = postings[0][1]
+                    main_index[word].extend(postings)
+
                 docId_to_url_builder.update(task_docId_mapping)
 
             if main_index:
@@ -214,7 +254,7 @@ class IndexBuilder:
         return self.docId_to_url
 
 if __name__ == "__main__":
-    folder_path = Path('DEV')
+    folder_path = Path('analyst/ANALYST') # path to the folder containing all the JSON files
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
