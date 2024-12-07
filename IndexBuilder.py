@@ -90,16 +90,14 @@ class IndexBuilder:
                 ...
             }
         """
-        processes = [] # list of all started processes
 
         main_index = defaultdict(dict) # Our main inverted index
-        # final_dict = defaultdict(defaultdict)
         docId_to_url_builder = dict() # dictionary to store the docId to URL mapping
+        writer_thread_queue = queue.Queue() # Queue to store all started threads
+
         docId = 1 # unique identifier for each document, incremented by 1 for each file
-        batchSize = 10000 # number of files to process before writing to disk, could make bigger to reduce I/O overhead?? But we gotta consider memory usage (too big = bad, computer could go into coma)
         skip = False # flag to skip the current file if it has an XMLParsedAsHTMLWarning
         batchCount = 0 # counter to keep track of the batch number
-        writer_thread_queue = queue.Queue() # Queue to store all started threads
 
         # Creating a single writer thread to write to disk
         writer_thread = threading.Thread(target=self._writer_thread_worker, args=(writer_thread_queue,), daemon=True)
@@ -159,7 +157,7 @@ class IndexBuilder:
                     #
 
                     # Check if batch limit has been reached, T -> etner the if block, F -> continue to next file
-                    if len(tasks_per_batch) % batchSize == 0:
+                    if len(tasks_per_batch) % self.batchSize == 0:
                         # retrieving the current batch of processed files
                         for task in tasks_per_batch:
                             partial_index, task_docId_mapping = task.get() # get the partial index from the task
@@ -177,7 +175,7 @@ class IndexBuilder:
                         
                         # Sort and Write the current batch to disk  
                         # main_index = self._sort_index(main_index) # (commented out for now since we changed the structure of the inverted index) 
-                        writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
+                        writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
                         
                         # print(f"this is the main Index: {main_index}")
                         main_index = defaultdict(list) # reset the main index
@@ -199,10 +197,10 @@ class IndexBuilder:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
                 # main_index = self._sort_index(main_index)
-                writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.txt"))
+                writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         
-        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.txt")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
+        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.json")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()

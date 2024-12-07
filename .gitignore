@@ -9,8 +9,9 @@ DEV/
 .idea/
 
 # Ignore batch output files
-Output_batch_*.txt 
+Output_batch_*.txt
+Output_batch_*.json
 smaller_index.txt
-docID_to_URL.txt
+docID_to_URL.json
 
 .DS_Store

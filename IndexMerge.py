@@ -80,7 +80,7 @@ class IndexMerge:
         """
 
         for file in os.listdir(main_directory):
-            if file.startswith("Output") and file.endswith(".txt"):
+            if file.startswith("Output") and file.endswith(".json"):
                 file_path = os.path.join(main_directory, file)
                 # print(file_path)
                 # opening the Output_Batch text file itself

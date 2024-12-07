@@ -113,7 +113,7 @@ class SearchQuery:
                 else:
                     postings_list[key].add(key1)
 
-        # print(f"this is the postings list: {postings_list}")
+        print(f"this is the postings list: {postings_list}")
         return
 
         # this is to collect the sets of docID each token has
@@ -157,7 +157,7 @@ class SearchQuery:
                 count += 1
             index += 1
             if count >= 10: break
-
+        return discovered_urls
 
 if __name__ == "__main__":
     mac_path = 'DEV'
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     scores = Scoring()
     built_docId_dict = {}
 
-    with open("IndexContent/docID_to_URL.txt", "r") as f:
+    with open("IndexContent/docID_to_URL.json", "r") as f:
         built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
     
     # c = 0
