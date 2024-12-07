@@ -1,11 +1,14 @@
 import re
 import time
+import json
 from collections import defaultdict
-from IndexMerge import IndexMerge
+from QueryIndex import QueryIndex
 # from IndexBuilder import build_index
 from IndexBuilder import IndexBuilder
-from nltk.stem import SnowballStemmer
+from nltk.stem import PorterStemmer
+from nltk.tokenize import RegexpTokenizer
 from Scoring import Scoring
+import nltk
 
 
 """
@@ -45,10 +48,11 @@ class SearchQuery:
         with the inverted index. 
         """
         # initializes the stemmer
-        stemmer = SnowballStemmer("english")
+        stemmer = PorterStemmer()
 
         # tokenizes the string query text 
-        tokens_list = re.findall(r'\b[a-zA-Z0-9]+\b', self.query_text)
+        tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
+        tokens_list = tokenizer.tokenize(self.query_text)
         # updates and assigns the attribute self.query_tokens
         self.query_tokens = [stemmer.stem(token.lower()) for token in tokens_list if len(token) >= 3]
 
@@ -62,17 +66,17 @@ class SearchQuery:
     
     def create_smaller_index(self):
         """
-        Uses the imported IndexMerge class from the
-        IndexMerge.py to create a smaller index that
+        Uses the imported QueryIndex class from the
+        QueryIndex.py to create a smaller index that
         only contains the tokens from the search query. 
         """
         query_tokens = self.get_query_tokens()
-        # instantiates an IndexMerge object 
-        indexMerge = IndexMerge(query_tokens)
+        # instantiates an QueryIndex object 
+        query_index = QueryIndex(query_tokens)
         # creates an smaller index
-        indexMerge.merge_index('.')
+        query_index.merge_index('IndexContent/')
         # assigns/updates attribute to be used in another function
-        self.smaller_index = indexMerge.get_query_index()
+        self.smaller_index = query_index.get_query_index()
 
     def get_smaller_index(self):
         """
@@ -82,7 +86,7 @@ class SearchQuery:
 
         return self.smaller_index
 
-    def match_search_query(self, docId_dict): 
+    def match_search_query(self, docId_dict, docId_built=False): 
         """
         Matches the search query tokens with the tokens
         inside the smaller index to get the top 5 results
@@ -93,36 +97,23 @@ class SearchQuery:
         """
         ### this to make report for M2
         smaller_index = self.get_smaller_index()
-        print(f"this is the smaller index: {smaller_index}")
+        # print(f"this is the smaller index: {smaller_index}")
         # compiles all of the postings into one list
         # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
         # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
         postings_list = dict() # dictionary
         sort_order = dict()
         # this does not necessarily find the intersection between each.:(
-        for key, value in smaller_index.items():
-            for key1 in value:
-                # print(f"this is the value being added: {key1}")
-                if key not in postings_list:
-                    postings_list[key] = set()
-                    postings_list[key].add(key1)
-                else:
-                    postings_list[key].add(key1)
-            sort_order[key] = len(postings_list[key])
+        # for key, value in smaller_index.items():
+        #     for key1 in value:
+        #         # print(f"this is the value being added: {key1}")
+        #         if key not in postings_list:
+        #             postings_list[key] = set()
+        #             postings_list[key].add(key1)
+        #         else:
+        #             postings_list[key].add(key1)
 
         # print(f"this is the postings list: {postings_list}")
-        # print(f"this is the sorted order: {sort_order}")
-        # return
-        sort_dict = dict(sorted(sort_order.items(), key=lambda item: item[1]))
-        print(f"this is the sorted dict: {sort_dict}")
-        intersect = set()
-        for key, value in sort_dict.items():
-            print(f"this is the key: {key}")
-            if len(intersect) == 0:
-                intersect = postings_list[key] #returns all docID's where word is present
-            else:
-                intersect = intersect.intersection(postings_list[key])
-        print(f"this is the intersection: {intersect}")
         return
 
         # this is to collect the sets of docID each token has
@@ -146,10 +137,45 @@ class SearchQuery:
         for posting_list in sorted_filtered_lists:
             for entry in posting_list:
                 current_docID = entry[0]
-                current_url = docId_dict.get(current_docID)
+                if docId_built == True:
+                    current_url = docId_dict.get(str(current_docID))
+                else:
+                    current_url = docId_dict.get(current_docID)
                 list_of_urls.append(current_url)
 
         self.query_results = list_of_urls
+
+
+    def getScoreData(self, docID, termData, scores, tokens):
+        """  docID --> {docID: url}
+            termData --> {term : [docID, termFrequency, weight]}
+            We want to find the tf-idf scores for these terms.
+        """
+        N = len(docID) # O(1)
+        tfIDF_scores = dict() # key is term, value is dict--> {docID: tfIDF}. This way we can retrieve data fast
+        # print(termData["cristina"])
+        for token in tokens:
+            DF = len(termData[token]) #the number of lists for that term is the number of documents that word is in
+            IDF = scores.inverse_document_frequency(N, DF) # these calulations will only be done once, IDF only changes in between terms
+            termScores = dict()
+
+            for documentData in termData[token]:
+                    # tf-IDF -->  1 + log(TF) * log(N / DF)
+                    # documentData = [docID, termFrequency, weight]
+                    # termScores[token][documentData[0]] = scores.tf_idf(documentData[1], IDF)   #tfIDF_scores = {"cristina": {docID: tf-IDF, docID: tf-IDF}}
+                    if documentData[0] in termScores:
+                        termScores[documentData[0]] += scores.tf_idf(documentData[1], IDF)
+                    else:
+                        termScores[documentData[0]] = scores.tf_idf(documentData[1], IDF)
+            tfIDF_scores.update(termScores)
+
+        sorted_dict = dict(sorted(tfIDF_scores.items(), key=lambda item: item[1], reverse=True))
+        
+        return sorted_dict
+
+
+
+
 
     def get_top5_urls(self):
         # prints the top 5 urls that matches to the search query
@@ -163,27 +189,54 @@ class SearchQuery:
                 count += 1
             index += 1
             if count >= 10: break
-
+        return discovered_urls
 
 if __name__ == "__main__":
+    mac_path = 'ANALYST'
+    # win_path = 'developer/DEV'
+
     time_start = time.time()
 
-    docId_dict = IndexBuilder("ANALYST")
-    docId_dict.build_index()
-    time_end = time.time()
-    print(f"Finished Index creation p rocess in: {time_end - time_start} seconds...")
-    scores = Scoring()
+    # instantiates an IndexBuilder object and creates the inverted index
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
+    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
+    time_end = time.time()
+
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    scores = Scoring()
+    built_docId_dict = {}
+    bigData = {}
+
+    with open("IndexContent/docID_to_URL.json", "r") as f:
+        built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+    
+    with open("IndexContent/Output_Batch_1.json", "r") as f: #Axel wrote this, testing purposes, still need to merge
+        bigData = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+
+    # c = 0
+    # for i,v in built_docId_dict.items():
+    #     if c == 5:
+    #         break
+    #     print(i,v)
+    #     c+=1
+
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
+
         search = SearchQuery(query_text) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
         search.create_smaller_index() # 
-        search.match_search_query(docId_dict)
-        # print(search.get_smaller_index())
+
+        # search.match_search_query(built_docId_dict, True) # Set to true when we already built the docId_dict
+
         print("Here are the top 5 results: ")
-        search.get_top5_urls()
+        # search.get_top5_urls()
+        # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
+
+        print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
         sortedTFIDF = {}
 
         # for key, value in search.get_smaller_index().items():
