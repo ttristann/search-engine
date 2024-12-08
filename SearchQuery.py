@@ -9,6 +9,7 @@ from nltk.stem import PorterStemmer
 from nltk.tokenize import RegexpTokenizer
 from Scoring import Scoring
 import nltk
+import multiprocessing
 
 
 """
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     time_end = time.time()
     print(f"Retrieved Index in: {time_end - time_start} seconds...")
 
-    print("docIdDict:", docId_dict["39970"])
+    print("docIdDict:", docId_dict["1"])
     
     while True:
         query_text = input("What would you like to search for: ")
@@ -152,7 +153,7 @@ if __name__ == "__main__":
         for key in finaldict:
             if count > 10:
                 break
-            print(built_docId_dict[key])
+            print(docId_dict[key])
             count += 1
 
         time_end_2 = time.time()
