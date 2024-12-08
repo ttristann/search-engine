@@ -50,8 +50,11 @@ class MergeIndex:
                 # # tf-IDF -->  1 + log(TF) * log(N / DF)
                 #documentData is each posting list --> [docID, TF, TFSCORE]
                 posting[2] = (posting[2] * IDF) # index 2 is the 1 + log(tf) value, * IDF which returns the complete tf-idf score
-                
-            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)
+
+            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:20]
+
+
+
             self.index[key] = sorted_list
 
     def _create_category_index(self, sorted_data):

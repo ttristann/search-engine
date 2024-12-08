@@ -143,38 +143,9 @@ class SearchQuery:
         self.query_results = list_of_urls
 
 
-    def getScoreData(self, docID, termData, scores, tokens):
-        """  docID --> {docID: url}
-            termData --> {term : [docID, termFrequency, weight]}
-            We want to find the tf-idf scores for these terms.
-        """
-        N = len(docID) # O(1)
-        tfIDF_scores = dict() # key is term, value is dict--> {docID: tfIDF}. This way we can retrieve data fast
+    def getScoreData(self):
+        pass
         
-        # tokens --> 
-        # print(f"these are the tokens: {tokens}") # tokens --> list ["crista", "lope"]
-        
-        for token in tokens:
-            if token not in termData: #if there is no key in dictionary, then no words that match it are found
-                continue
-            print(termData[token])
-            DF = len(termData[token]) #the number of lists for that term is the number of documents that word is in
-            IDF = scores.inverse_document_frequency(N, DF) # these calulations will only be done once, IDF only changes in between terms
-            # termScores = dict()
-
-            for documentData in termData[token]:
-                    # tf-IDF -->  1 + log(TF) * log(N / DF)
-                    # documentData = [docID, termFrequency, weight]
-                    # termScores[token][documentData[0]] = scores.tf_idf(documentData[1], IDF)   #tfIDF_scores = {"cristina": {docID: tf-IDF, docID: tf-IDF}}
-                    if documentData[0] in tfIDF_scores:
-                        tfIDF_scores[documentData[0]] += (scores.tf_idf(documentData[1], IDF) + documentData[2]) #Add score instead of replacing value
-                    else:
-                        tfIDF_scores[documentData[0]] = (scores.tf_idf(documentData[1], IDF) + documentData[2]) #create dictionary pair --> term: tf-idf
-            # tfIDF_scores.update(termScores)
-
-        sorted_dict = dict(sorted(tfIDF_scores.items(), key=lambda item: item[1], reverse=True))
-        print("\n\n")
-        return sorted_dict
 
 
 
@@ -261,8 +232,10 @@ if __name__ == "__main__":
         # search.get_top5_urls()
         # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
 
-        print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
-        sortedTFIDF = {}
+        # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
+        # sortedTFIDF = {}
 
         time_end_2 = time.time()
+        print()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
+        print()
