@@ -83,22 +83,9 @@ class SearchQuery:
         # creates an smaller index
         query_index.build_query_index()
         # assigns/updates attribute to be used in another function
-        self.search_index = query_index.get_query_index()
+        # self.search_index = query_index.get_query_index()
 
-
-    def get_top5_urls(self):
-        # prints the top 5 urls that matches to the search query
-        discovered_urls = set()
-        count = 0
-        index = 0
-        for url in self.query_results:
-            if url not in discovered_urls:
-                print(self.query_results[index])
-                discovered_urls.add(url)
-                count += 1
-            index += 1
-            if count >= 10: break
-        return discovered_urls
+        
 
 if __name__ == "__main__":
     mac_path = 'DEV'
@@ -130,9 +117,10 @@ if __name__ == "__main__":
 
         search = SearchQuery(query_text, docId_dict) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        # search.create_smaller_index() # 
-        # search.match_search_query(built_docId_dict)
+        finalTop10 = dict()
+        intersections = set()
         loadedFiles = dict()
+
         for token in search.get_query_tokens():
             if token[0] not in loadedFiles: #file has not been loaded, we need to load it
                 file = token[0] + ".json"
@@ -142,28 +130,30 @@ if __name__ == "__main__":
             if token not in loadedFiles[token[0]]:
                 print("no query exists")
             else:
-                count = 0
-                # print(f"these are the top 10 query terms for this word: {token}")
-                #
-                # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
+                tempSet = set() # this set will be intersected by master set
                 for posting in loadedFiles[token[0]][token]:
-                    if count > 10:
-                        break
-                    # print(docId_dict[str(posting[0])])
-                    count += 1
-            
+                    if str(posting[0]) not in loadedFiles:
+                        finalTop10[str(posting[0])] = posting[2]
+                        tempSet.add(str(posting[0]))
+
+                if len(intersections) == 0:
+                    intersections = tempSet
+                else:
+                    intersections = intersections.intersection(tempSet)
+        
 
 
-
-
-        # print("Here are the top 5 results: ")
-        # search.get_top5_urls()
-        # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
-
-        # print(search.getScoreData(docId_dict, bigData, scores, search.get_query_tokens()))
-        # sortedTFIDF = {}
+        finaldict = dict()
+        for docId in intersections:
+            finaldict[docId] = finalTop10[docId] #finalDict only holds intersections.
+        finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True))
+        
+        count = 0
+        for key in finaldict:
+            if count > 10:
+                break
+            print(built_docId_dict[key])
+            count += 1
 
         time_end_2 = time.time()
-        print()
-        print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-        print()
+        print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")

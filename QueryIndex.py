@@ -4,6 +4,11 @@ import os, json
 import time
 
 
+from nltk.stem import PorterStemmer
+from nltk.tokenize import RegexpTokenizer
+
+
+
 """
 This class that analyzes through the newly created
 partial index inside the Output_Batch text files 
@@ -79,7 +84,7 @@ class QueryIndex:
         main query_index filled with all of the entries
         of the query_tokens. 
         """
-        num_processes = len(self.query_tokens)
+        num_processes = 4
 
         # splits the tokens into chunks for multiprocessing
         self.query_tokens = list(set(self.query_tokens))
@@ -123,6 +128,7 @@ class QueryIndex:
 if __name__ == "__main__":
     query_tokens = ["tuesday", "yesterday", "today"]
     tokens = ["mach", "learn"]
+    q = ["acm"]
     words = [
     'Apple',      # A
     'Ball',       # B
@@ -151,10 +157,18 @@ if __name__ == "__main__":
     'Yacht',      # Y
     'Zebra'       # Z
 ]
-    lst = [word.lower() for word in words]
-    small_index = QueryIndex(query_tokens)
+    
+    # query_text = "master of software engineering"
+    # stemmer = PorterStemmer()
+    # # tokenizes the string query text 
+    # tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
+    # tokens_list = tokenizer.tokenize(query_text)
+    # # updates and assigns the attribute self.query_tokens
+    # main_tokens = [stemmer.stem(token.lower()) for token in tokens_list]
+    # lst = [word.lower() for word in words]
+    small_index = QueryIndex(q)
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
     # small_index.print_query_index()
-    print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
+    print(f"Finished smaller index creation process in: {(time_end - time_start) * 1000} miliseconds...")
