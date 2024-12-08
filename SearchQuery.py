@@ -6,7 +6,6 @@ import string
 
 from collections import defaultdict
 from QueryIndex import QueryIndex
-from functools import lru_cache
 
 # from IndexBuilder import build_index
 from IndexBuilder import IndexBuilder
@@ -70,55 +69,6 @@ class SearchQuery:
 
         return self.query_tokens
     
-    def build_bookkeeper(self):
-        """
-        Builds the bookkeeper dictionary that holds
-        token offset values within the inverted index
-
-        Structure:
-        {
-            file_name: {
-                token: offset,
-                token2: offset2,
-            },
-            file_name2: {
-                token: offset
-            },
-            ...
-        }
-        """
-        for json_file in Path('IndexCategory').rglob('*.json'):
-            with open(json_file, "r") as f:
-                token_list = list()
-                started = False
-
-                while True:
-
-                    char = f.read(1) # reads one character at a time
-                    
-                    if not char:
-                        # end of file, move to the next file
-                        break
-                    
-                    if char == '"':
-                        # indicates the start/end of a token since the token is enclosed in double quotes (All other values such as docID, tf, and weight are represented as numbers)
-                        if not started:
-                            # token building process has started, we start retrieving the token's offset
-                            started = True
-                            offset = f.tell() - 1 # gets the starting offset position of the token
-                        else:
-                            # token building process has ended, we add the token and its offset to the bookkeeper dictionary
-                            started = False
-                            token = "".join(token_list) # joins the token list to form the token
-                            self.bookkeeper[json_file.name][token] = offset # update the bookkeeper to hold the token and its offset for the given file
-                            token_list.clear() # clear the token list for the next token
-                    elif started:
-                        # token building process has started, read the token one character at a time, add each character to the token list
-                        token_list.append(char)
-        
-        with open("bookkeeper.json", "w") as f:
-            json.dump(self.bookkeeper, f, indent=4)
-    
     def parse_json(self, file):
         """
         Parses the json file from the current position
@@ -154,7 +104,6 @@ class SearchQuery:
         return "".join(char_list)
                 
         
-    @lru_cache(maxsize=10) # Limits cache size to 10 loaded files at a time, least used files are removed automatically
     def create_search_index(self):
         """
         Creates a smaller index containing only the tokens from the search query.
@@ -200,8 +149,8 @@ class SearchQuery:
 
         # Compute finalTop10 and intersections
         for token in self.query_tokens:
-            first_char = token[0]
-            postings = loadedFiles[first_char].get(token, [])
+            char = token[0]
+            postings = loadedFiles[char].get(token, [])
 
             if not postings:
                 print(f"No postings found for token '{token}'.")
@@ -209,11 +158,11 @@ class SearchQuery:
 
             tempSet = set()
             for posting in postings:
-                doc_id_str = str(posting[0])
-                score = posting[2]
-                if doc_id_str not in finalTop10:
-                    finalTop10[doc_id_str] = score
-                tempSet.add(doc_id_str)
+                doc_id = str(posting[0])
+                tf_idf_score = posting[2]
+                if doc_id not in finalTop10:
+                    finalTop10[doc_id] = tf_idf_score
+                tempSet.add(doc_id)
 
             if not intersections:
                 intersections = tempSet
@@ -251,11 +200,6 @@ class SearchQuery:
             else:
                 print(f"\t{count}. {docId_dict[key]}\n")
                 count += 1
-                
-    def get_bookkeeper(self):
-        with open("bookkeeper.json", "r") as f:
-            bookkeeper = json.load(f)
-        return bookkeeper
     
     def set_bookkeeper(self, bookkeeper):
         self.bookkeeper = bookkeeper
@@ -268,24 +212,24 @@ if __name__ == "__main__":
     bigData = {}
 
     time_start = time.time()
-    
-    # Index Creation/Loading
+
     try:
         with open("IndexContent/docID_to_URL.json", "r") as f:
             docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+        with open("IndexCategory/bookkeeper.json", "r") as f:
+            bk = json.load(f)
     except FileNotFoundError:
         print("Index not found. Creating Index...")
         # instantiates an IndexBuilder object and creates the inverted index
         indexBuilder = IndexBuilder(win_path)
         indexBuilder.build_index()
+        indexBuilder.build_bookkeeper()
         docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
-        bookkeeper = IndexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
+        bk = indexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
     
     time_end = time.time()
     print(f"Retrieved Index in: {time_end - time_start} seconds...")
     
-    search2 = SearchQuery("covid", docId_dict)
-    bk = search2.get_bookkeeper()
     ###############################################################################
     
     # Search Query Processing
@@ -296,14 +240,9 @@ if __name__ == "__main__":
         search = SearchQuery(query_text, docId_dict) # initializes SearchQuery object
         search.set_bookkeeper(bk) # sets the bookkeeper dictionary for the search query
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        # bookkeeper = search.get_bookkeeper() # retrieves the bookkeeper dictionary
-        # for key in bookkeeper.keys():
-        #     print(key)
 
         finalTop10, intersections = search.create_search_index() # creates a smaller index for the search query
         search.retrieve_search_results(finalTop10, intersections) # retrieves the search results
-
-        
 
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")

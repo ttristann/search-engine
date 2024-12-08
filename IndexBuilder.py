@@ -308,8 +308,6 @@ class IndexBuilder:
                         # end of file, move to the next file
                         break
                     
-                    
-
                     if char == '"':
                         # indicates the start/end of a token since the token is enclosed in double quotes (All other values such as docID, tf, and weight are represented as numbers)
                         if not started:
@@ -325,8 +323,8 @@ class IndexBuilder:
                     elif started:
                         # token building process has started, read the token one character at a time, add each character to the token list
                         token_list.append(char)
-        
-        with open("bookkeeper.json", "w") as f:
+    
+        with open("IndexContent/bookkeeper.json", "w") as f:
             json.dump(self.bookkeeper, f, indent=4)
             
     def get_docId_to_url(self):
