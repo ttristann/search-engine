@@ -154,7 +154,7 @@ if __name__ == "__main__":
         for key in finaldict: #first exhaust links for intersection 
             if count > 10:
                 break
-            print(built_docId_dict[key])
+            print(docId_dict[key])
             count += 1
         for key in finalTop10: # now fill the remainding 10 with top sorted tf-idf scores, ensure no repeats with set values
             if count > 10:
@@ -162,7 +162,7 @@ if __name__ == "__main__":
             if key in finaldict: # if key is in the final dict, then we already showed it.
                 continue
             else:
-                print(built_docId_dict[key])
+                print(docId_dict[key])
                 count += 1
 
         time_end_2 = time.time()
