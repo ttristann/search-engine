@@ -28,9 +28,11 @@ class MergeIndex:
         # Sort the postings for each term by docID
         self.index = self._quicksort(self.index)
         # creates all of the json category files
-        self._create_category_index(self.index)
+        self._create_category_index()
 
-    def _create_category_index(self, sorted_data):
+        self.index = dict() # Clear the index to free up memory
+
+    def _create_category_index(self):
         """
         Creates a directory to hold all the json files
         that are going to be created for every category
@@ -46,7 +48,7 @@ class MergeIndex:
         # Create a dictionary to hold data for each category
         category_data = {}
 
-        for token, postings in sorted_data.items():
+        for token, postings in self.index.items():
             category_name = token[0].lower()
             if category_name not in category_data:
                 category_data[category_name] = {}

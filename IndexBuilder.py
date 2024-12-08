@@ -259,7 +259,7 @@ class IndexBuilder:
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()
-        
+
         print("\nAll files have been processed and written to disk...")
         print(f"Total docID to URL mappings: {len(docId_to_url_builder)}")
         print("-----------------------------------------------------")
@@ -267,10 +267,13 @@ class IndexBuilder:
         print("\n\n-----------------------------------------------------")
         print("Starting merging process...")
         print("-----------------------------------------------------")
+        print("All files successfully merged and categorized lexically in 'IndexCategory/...' folder!")
+        print("-----------------------------------------------------\n\n")
+
         merger = MergeIndex()
         merger.merge_index("IndexContent/") # merge all the partial indexes into one main index
         
-
+        
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary
 
     def get_docId_to_url(self):
