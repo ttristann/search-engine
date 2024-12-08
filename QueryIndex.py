@@ -27,34 +27,74 @@ class QueryIndex:
         self.query_tokens = query_tokens
         self.query_index = defaultdict(list)
 
-    def build_query_index(self):
+    @staticmethod
+    def _process_token_chunk(args):
         """
-        Iterates through the query_tokens where
-        each token is analyzed to get its category
-        based on its first letter and open up the 
-        corresponding category json file (eg. a.json). 
+        Helper function that is called up to process
+        a chunk of tokens from query_tokens and then
+        creates a partial/smaller index that is filled with
+        only entries of the chunk tokens, that is later to
+        be merged with other partial indexes. 
+        """
 
-        Once the json file is opened and loaded, the
-        token's entry inside the file is looked up 
-        and acquired to update the query_index attribute
-        entry for that token. 
-        """
-        category_folder = "IndexCategory"
-        # iterates through query_tokens
-        for token in self.query_tokens:
-            # identifies the category file to opem
+        tokens_chunk, category_folder = args
+        # partial index filled with entries of the tokens_chunk
+        # acquired from the different json files. 
+        # This is to be returned to be merged with other indexes
+        partial_index = defaultdict(list)
+
+        for token in tokens_chunk:
             category_name = token[0].lower()
             # gets the path of the category file
             category_path = os.path.join(category_folder, f"{category_name}.json")
-            with open(category_path, 'r') as current_file:
-                content = json.load(current_file)
-                # gets the entry for that token inside the file
-                new_posting = content.get(token, [])
-                if not new_posting: # skips token if there is no entry
-                    continue
-                # updates the query_index with the new posting
-                self.query_index[token].extend(new_posting)
+            try: 
+                with open(category_path, 'r') as current_file:
+                    content = json.load(current_file)
+                    # gets the entry for that token inside the file
+                    new_posting = content.get(token, [])
+                    if not new_posting: # skips token if there is no entry
+                        continue
+                    # updates the query_index with the new posting
+                    partial_index[token].extend(new_posting)
 
+            except FileNotFoundError:
+                print(f"Category file {category_path} not found.")
+            except json.JSONDecodeError:
+                print(f"Error decoding JSON from file {category_path}.")
+
+        return partial_index
+        
+
+    def build_query_index(self):
+        """
+        Uses multiprocessing to create and use pools
+        where each pool takes in a certain amount of
+        tokens from the query_tokens to open up a
+        certain category json file to get postings 
+        of the tokens. 
+
+        Once all of the processes have been completed 
+        it merges all of the partial indexes created 
+        from the processes to be assigned as the 
+        main query_index filled with all of the entries
+        of the query_tokens. 
+        """
+        num_processes = len(self.query_tokens)
+
+        # splits the tokens into chunks for multiprocessing
+        chunk_size = (len(self.query_tokens) + num_processes - 1) // num_processes
+        token_chunks = [self.query_tokens[i:i + chunk_size] for i in range(0, len(self.query_tokens), chunk_size)]
+
+        category_folder = "IndexCategory"
+        
+        # create and uses Pool to process the chunks at the same time
+        with Pool(processes=num_processes) as pool:
+            results = pool.map(self._process_token_chunk, [(chunk, category_folder) for chunk in token_chunks])
+
+        # merge all the partial indexes together into self.query_index
+        for partial_index in results:
+            for token, postings in partial_index.items():
+                self.query_index[token].extend(postings)
 
     def get_query_index(self):
         """
@@ -72,7 +112,7 @@ class QueryIndex:
                 if count == 10: break
 
 if __name__ == "__main__":
-    query_tokens = ["crista", "lope"]
+    query_tokens = ["tuesday", "yesterday", "today"]
     words = [
     'Apple',      # A
     'Ball',       # B
@@ -106,5 +146,5 @@ if __name__ == "__main__":
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
-    small_index.get_query_index()
+    # small_index.get_query_index()
     print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
