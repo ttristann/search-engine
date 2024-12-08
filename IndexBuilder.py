@@ -8,7 +8,9 @@ import threading
 import queue
 import math
 import multiprocessing
+import glob
 
+from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
 from collections import defaultdict
 from bs4 import BeautifulSoup, Comment, XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning
 from tokenizer import Tokenizer
@@ -82,8 +84,14 @@ class IndexBuilder:
         # for the words present in the current file
         for token, frequency in ordered_tokens.items():
             stemmed_token = PorterStemmer().stem(token) # stemming the token
-            weight = important_words.get(token, 0) # retrieves the weight of the token if it's an important word, otherwise defaults to 0
-            current_entry = (docId, frequency, weight) # Note: for files withmultiple types of importance (title, header, etc.), the highest weight will take precedence
+
+            # retrieves the weight of the token if it's an 
+            # important word, otherwise defaults to 0
+            weight = important_words.get(token, 0)
+
+            # Note: for files withmultiple types of importance (title, header, etc.), 
+            # the highest weight will take precedence
+            current_entry = (docId, frequency, weight)
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
@@ -206,14 +214,10 @@ class IndexBuilder:
                     # gets the actual text inside the HTML file
                     raw_text = soup_obj.get_text(separator=" ", strip=True)
                     main_text = " ".join(re.findall(r'[a-zA-Z0-9]+', raw_text))
-                    # print(f"this is the main text: {main_text}")
 
                     # calls the process_file function, tokenizing the file's text and adding it to the main index
                     task = pool.apply_async(self._process_file, args=(main_text, important_words, docId, data.get("url")))
                     tasks_per_batch.append(task) # add task to the current batch
-
-                    # updates the docID_dict to add the entry docId: url
-                    # docId_dict[docId] = data.get("url")
                     docId += 1
                     #
 
@@ -248,12 +252,14 @@ class IndexBuilder:
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
                 main_index = self._sort_index(main_index)
                 writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
-                # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
-        
-        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.json")) # gather all {docId : url} pairs and write to disk in ONE FILE, different from the batch files which write in batches
+
+        # gather all {docId : url} pairs and write to disk in 
+        # ONE FILE, different from the batch files which write in batches
+        writer_thread_queue.put((docId_to_url_builder, "IndexContent/docID_to_URL.json"))
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()
+        
         print("\nAll files have been processed and written to disk...")
         print(f"Total docID to URL mappings: {len(docId_to_url_builder)}")
         print("-----------------------------------------------------")
@@ -269,9 +275,9 @@ class IndexBuilder:
 
     def get_docId_to_url(self):
         return self.docId_to_url
-
+    
 if __name__ == "__main__":
-    folder_path = Path('developer/DEV') # path to the folder containing all the JSON files
+    folder_path = Path('DEV') # path to the folder containing all the JSON files
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
@@ -280,9 +286,3 @@ if __name__ == "__main__":
     time_end = time.time() # end the timer for index
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
-
-    # time_start_2 = time.time() # start the timer for creating report
-    # report_creation('.')
-    # time_end_2 = time.time() # end the timer for creating report
-
-    # print(f"Finished report creation process in: {time_end_2 - time_start_2} seconds...")

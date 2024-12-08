@@ -30,12 +30,18 @@ class SearchQuery:
         self.docId_dict = docId_dict
 
         self.query_tokens = list()
-        self.smaller_index = defaultdict(list)
+        self.search_index = defaultdict(list)
         self.query_results = list()
         self.queryResultsFrequencies = {} #{docID: {term: frequencie}}
     
     def getQueryResults(self):
         return self.query_results
+    
+    def get_search_index(self):
+        return self.search_index
+    
+    def get_query_tokens(self):
+        return self.query_tokens
 
     def tokenize_query(self):
         """
@@ -73,41 +79,24 @@ class SearchQuery:
         # instantiates an QueryIndex object 
         query_index = QueryIndex(query_tokens)
         # creates an smaller index
-        query_index.build_query_index("IndexContent/")
+        query_index.build_query_index()
         # assigns/updates attribute to be used in another function
-        self.smaller_index = query_index.get_query_index()
+        self.search_index = query_index.get_query_index()
 
-    def get_smaller_index(self):
+    def search_rank(self):
         """
-        Returns the updated smaller_index to be used
-        outside of the function or class.
+        Compiles all of the documents that are in some 
+        way relative to the search query and ranks
+        the documents based on td-idf score that are
+        assigned to the document. 
+
+        Organizes the documents inside search_index, 
+        and orders them in descending order with the
+        first entry being the most relative to the
+        search query.
         """
+        print(self.search_index)
 
-        return self.smaller_index
-
-    def get_top5_urls(self):
-        # prints the top 5 urls that matches to the search query
-        print(f"this is the smaller index: {self.smaller_index}")
-
-        for token, postings in self.smaller_index.items():
-            count = 0
-            print(f'current token: {token}')
-            for posting in postings:
-                print(f"\t{posting}")
-                count += 1
-                if count == 10: break
-        
-        discovered_urls = set()
-        count = 0
-        index = 0
-        for url in self.query_results:
-            if url not in discovered_urls:
-                print(self.query_results[index])
-                discovered_urls.add(url)
-                count += 1
-            index += 1
-            if count >= 10: break
-        return discovered_urls
 
 if __name__ == "__main__":
     mac_path = 'DEV'
@@ -144,7 +133,7 @@ if __name__ == "__main__":
         search.create_smaller_index() # 
 
         print("Here are the top 5 results: ")
-        search.get_top5_urls()
+        search.search_rank()
         sortedTFIDF = {}
 
         time_end_2 = time.time()
