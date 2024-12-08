@@ -1,5 +1,5 @@
 from collections import defaultdict
-from multiprocessing import Process, Manager, Pool
+from multiprocessing import Pool
 import os, json
 import time
 
@@ -79,7 +79,7 @@ class QueryIndex:
         main query_index filled with all of the entries
         of the query_tokens. 
         """
-        num_processes = len(self.query_tokens)
+        num_processes = 4
 
         # splits the tokens into chunks for multiprocessing
         chunk_size = (len(self.query_tokens) + num_processes - 1) // num_processes
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     'Zebra'       # Z
 ]
     # lst = [word.lower() for word in words]
-    small_index = QueryIndex(query_tokens)
+    small_index = QueryIndex(q)
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
