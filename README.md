@@ -2,7 +2,8 @@
 
 ## TODO:
 - GUI implementation
-- add multiprocessing to queryIndex
+- implement tf-idf ranking
+- create a main script that runs the whole program
 
 
 
