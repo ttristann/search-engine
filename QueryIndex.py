@@ -96,11 +96,8 @@ class QueryIndex:
             for token, postings in partial_index.items():
                 self.query_index[token].extend(postings)
 
-    def get_query_index(self):
+    def print_query_index(self):
         """
-        Returns the query index to be used 
-        outside of the function or class. 
-        
         THIS IS FOR TESTING PURPOSES
         """
         for token, postings in self.query_index.items():
@@ -110,6 +107,12 @@ class QueryIndex:
                 print(f"\t{posting}")
                 count += 1
                 if count == 10: break
+
+    def get_query_index(self):
+        """
+        Returns the query_index.
+        """
+        return self.query_index
 
 if __name__ == "__main__":
     query_tokens = ["tuesday", "yesterday", "today"]
@@ -147,5 +150,5 @@ if __name__ == "__main__":
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
-    # small_index.get_query_index()
+    # small_index.print_query_index()
     print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
