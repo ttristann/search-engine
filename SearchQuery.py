@@ -85,40 +85,150 @@ class SearchQuery:
         # assigns/updates attribute to be used in another function
         self.search_index = query_index.get_query_index()
 
-    def search_rank(self):
+    def get_smaller_index(self):
         """
-        Compiles all of the documents that are in some 
-        way relative to the search query and ranks
-        the documents based on td-idf score that are
-        assigned to the document. 
-
-        Organizes the documents inside search_index, 
-        and orders them in descending order with the
-        first entry being the most relative to the
-        search query.
+        Returns the updated smaller_index to be used
+        outside of the function or class.
         """
-        print(self.search_index)
 
+        return self.smaller_index
+
+    def match_search_query(self, docId_dict, docId_built=False): 
+        """
+        Matches the search query tokens with the tokens
+        inside the smaller index to get the top 5 results
+        or documents based on tf-idf score that is assigned
+        with each posting in the inverted index. 
+
+        TO DO: NEED A MORE EFFICIENT WAY OF MATCHING
+        """
+        ### this to make report for M2
+        smaller_index = self.get_smaller_index()
+        # print(f"this is the smaller index: {smaller_index}")
+        # compiles all of the postings into one list
+        # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
+        # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
+        postings_list = dict() # dictionary
+        sort_order = dict()
+        # this does not necessarily find the intersection between each.:(
+        # for key, value in smaller_index.items():
+        #     for key1 in value:
+        #         # print(f"this is the value being added: {key1}")
+        #         if key not in postings_list:
+        #             postings_list[key] = set()
+        #             postings_list[key].add(key1)
+        #         else:
+        #             postings_list[key].add(key1)
+
+        # print(f"this is the postings list: {postings_list}")
+        return
+
+        # this is to collect the sets of docID each token has
+        # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
+
+        # finds the intersectiong docID
+        # common_docIDs = set.intersection(*docID_sets)
+        print(f"this is the common DOCIDS: {postings_list}")
+        # filters the postings_list to only the entries that have the common docIDs
+        filtered_lists = [
+            [(docID, freq) for docID, freq in lst if docID in common_docIDs]
+            for lst in postings_list
+        ]
+        # sorts them by freq descending
+        sorted_filtered_lists = [
+            sorted(lst, key=lambda x: x[1], reverse=True)
+            for lst in filtered_lists
+        ]
+        # iterates the sorted_filtered_list to assign the url to each docID
+        list_of_urls = list() # accumulate the urls 
+        for posting_list in sorted_filtered_lists:
+            for entry in posting_list:
+                current_docID = entry[0]
+                if docId_built == True:
+                    current_url = docId_dict.get(str(current_docID))
+                else:
+                    current_url = docId_dict.get(current_docID)
+                list_of_urls.append(current_url)
+
+        self.query_results = list_of_urls
+
+
+    def getScoreData(self, docID, termData, scores, tokens):
+        """  docID --> {docID: url}
+            termData --> {term : [docID, termFrequency, weight]}
+            We want to find the tf-idf scores for these terms.
+        """
+        N = len(docID) # O(1)
+        tfIDF_scores = dict() # key is term, value is dict--> {docID: tfIDF}. This way we can retrieve data fast
+        
+        # tokens --> 
+        # print(f"these are the tokens: {tokens}") # tokens --> list ["crista", "lope"]
+        
+        for token in tokens:
+            if token not in termData: #if there is no key in dictionary, then no words that match it are found
+                continue
+            print(termData[token])
+            print()
+            DF = len(termData[token]) #the number of lists for that term is the number of documents that word is in
+            IDF = scores.inverse_document_frequency(N, DF) # these calulations will only be done once, IDF only changes in between terms
+            # termScores = dict()
+
+            for documentData in termData[token]:
+                    # tf-IDF -->  1 + log(TF) * log(N / DF)
+                    # documentData = [docID, termFrequency, weight]
+                    # termScores[token][documentData[0]] = scores.tf_idf(documentData[1], IDF)   #tfIDF_scores = {"cristina": {docID: tf-IDF, docID: tf-IDF}}
+                    if documentData[0] in tfIDF_scores:
+                        tfIDF_scores[documentData[0]] += (scores.tf_idf(documentData[1], IDF) + documentData[2]) #Add score instead of replacing value
+                    else:
+                        tfIDF_scores[documentData[0]] = (scores.tf_idf(documentData[1], IDF) + documentData[2]) #create dictionary pair --> term: tf-idf
+            # tfIDF_scores.update(termScores)
+
+        sorted_dict = dict(sorted(tfIDF_scores.items(), key=lambda item: item[1], reverse=True))
+        print("\n\n")
+        return sorted_dict
+
+
+
+
+
+    def get_top5_urls(self):
+        # prints the top 5 urls that matches to the search query
+        discovered_urls = set()
+        count = 0
+        index = 0
+        for url in self.query_results:
+            if url not in discovered_urls:
+                print(self.query_results[index])
+                discovered_urls.add(url)
+                count += 1
+            index += 1
+            if count >= 10: break
+        return discovered_urls
 
 if __name__ == "__main__":
     mac_path = 'DEV'
-    win_path = 'developer/DEV'
+    # win_path = 'developer/DEV'
 
     time_start = time.time()
-    scores = Scoring()
-
-    try:
-        with open("IndexContent/docID_to_URL.json", "r") as f:
-            docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
-    except FileNotFoundError:
-        # instantiates an IndexBuilder object and creates the inverted index
-        indexBuilder = IndexBuilder(win_path)
-        indexBuilder.build_index()
-        docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    
+    # instantiates an IndexBuilder object and creates the inverted index
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
+    docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
     time_end = time.time()
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    scores = Scoring()
+    built_docId_dict = {}
+    bigData = {}
+
+    with open("IndexContent/docID_to_URL.json", "r") as f:
+        built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+    
+    # with open("IndexContent/Output_Batch_1.json", "r") as f: #Axel wrote this, testing purposes, still need to merge
+    #     bigData = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+
     # c = 0
     # for i,v in built_docId_dict.items():
     #     if c == 5:
@@ -135,7 +245,10 @@ if __name__ == "__main__":
         search.create_smaller_index() # 
 
         print("Here are the top 5 results: ")
-        search.search_rank()
+        # search.get_top5_urls()
+        # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
+
+        print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
         sortedTFIDF = {}
 
         time_end_2 = time.time()

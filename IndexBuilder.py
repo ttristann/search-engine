@@ -18,6 +18,7 @@ from pathlib import Path
 from nltk.stem import PorterStemmer
 from ReportCreation import report_creation
 from MergeIndex import MergeIndex
+from Scoring import Scoring
 
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
@@ -28,6 +29,7 @@ class IndexBuilder:
         self.docId_to_url = dict() # dictionary to store the docId to URL mapping
         self.filePath = filePath # path to the folder containing all the JSON files
         self.batchSize = batchSize # number of files to process before writing to disk, defaulted to 10,000 files per batch
+        self.scoring = Scoring()
     
     def _writer_thread_worker(self, writer_thread_queue):
         """
@@ -88,10 +90,10 @@ class IndexBuilder:
             # retrieves the weight of the token if it's an 
             # important word, otherwise defaults to 0
             weight = important_words.get(token, 0)
-
+            tfScore = (self.scoring.term_frequency(frequency) + weight) #Axel: add weight after tf
             # Note: for files withmultiple types of importance (title, header, etc.), 
             # the highest weight will take precedence
-            current_entry = (docId, frequency, weight)
+            current_entry = (docId, frequency, tfScore)  # 3rd element is now tfScore
             temp_index[stemmed_token].append(current_entry)
         
         return temp_index, temp_docId_to_url
