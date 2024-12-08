@@ -73,6 +73,20 @@ class SearchQuery:
         # assigns/updates attribute to be used in another function
         self.search_index = query_index.get_query_index()
 
+    def searh_rank(self):
+        """
+        Compiles all of the documents that are in some 
+        way relative to the search query and ranks
+        the documents based on td-idf score that are
+        assigned to the document. 
+
+        Organizes the documents inside search_index, 
+        and orders them in descending order with the
+        first entry being the most relative to the
+        search query.
+        """
+        pass
+
 
 if __name__ == "__main__":
     mac_path = 'DEV'
