@@ -147,7 +147,7 @@ if __name__ == "__main__":
     'Zebra'       # Z
 ]
     # lst = [word.lower() for word in words]
-    small_index = QueryIndex(tokens)
+    small_index = QueryIndex(query_tokens)
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report

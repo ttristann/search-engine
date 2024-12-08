@@ -52,15 +52,11 @@ class SearchQuery:
         """
         # initializes the stemmer
         stemmer = PorterStemmer()
-        start_time = time.time()
         # tokenizes the string query text 
         tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
         tokens_list = tokenizer.tokenize(self.query_text)
         # updates and assigns the attribute self.query_tokens
         self.query_tokens = [stemmer.stem(token.lower()) for token in tokens_list if len(token) >= 3]
-        end_time = time.time()
-
-        print(f"Finished stemming in {(end_time - start_time)* 1000} miliseconds...")
         
     
     def create_search_index(self):
