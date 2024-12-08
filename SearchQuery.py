@@ -116,36 +116,64 @@ if __name__ == "__main__":
     # #     print(i,v)
     # #     c+=1
 
-    # while True:
-    #     query_text = input("What would you like to search for: ")
-    #     time_start_2 = time.time()
+    while True:
+        query_text = input("What would you like to search for: ")
+        time_start_2 = time.time()
 
-    #     search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
-    #     search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-    #     # search.create_smaller_index() # 
-    #     # search.match_search_query(built_docId_dict)
-    #     # loadedFiles = dict()
-    #     # for token in search.get_query_tokens():
-    #     #     if token[0] not in loadedFiles: #file has not been loaded, we need to load it
-    #     #         file = token[0] + ".json"
-    #     #         with open(f"IndexCategory/{file}", "r") as f:
-    #     #             loadedFiles[token[0]] = json.load(f) #we now have access to the folder
+        search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
+        search.tokenize_query()  # # stems search query words. ex: lopes --> lope
+        # search.create_smaller_index() # 
+        # search.match_search_query(built_docId_dict)
+        finalTop10 = dict()
+        intersections = set()
+        loadedFiles = dict()
+
+        for token in search.get_query_tokens():
+            if token[0] not in loadedFiles: #file has not been loaded, we need to load it
+                file = token[0] + ".json"
+                with open(f"IndexCategory/{file}", "r") as f:
+                    loadedFiles[token[0]] = json.load(f) #we now have access to the folder
             
-    #     #     if token not in loadedFiles[token[0]]:
-    #     #         print("no query exists")
-    #     #     else:
-    #     #         count = 0
-    #     #         print(f"these are the top 10 query terms for this word: {token}")
-    #     #         #
-    #     #         # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
-    #     #         for posting in loadedFiles[token[0]][token]:
-    #     #             if count > 10:
-    #     #                 break
-    #     #             print(built_docId_dict[str(posting[0])])
-    #     #             count += 1
-            
+            if token not in loadedFiles[token[0]]:
+                print("no query exists")
+            else:
+                # count = 0
+                # print(f"these are the top 10 query terms for this word: {token}\n")
+                #
+                # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
+                tempSet = set() # this set will be intersected by master set
+                for posting in loadedFiles[token[0]][token]:
+                    # if count > 10:
+                    #     break
+                    # print(built_docId_dict[str(posting[0])])
+                    if str(posting[0]) not in loadedFiles:
+                        finalTop10[str(posting[0])] = posting[2]
+                        tempSet.add(str(posting[0]))
+                    # count += 1
+
+                if len(intersections) == 0:
+                    intersections = tempSet
+                    # print(f"this is the intersection this round: {intersections}")
+                else:
+                    # print(f"Before: {tempSet}")
+                    intersections = intersections.intersection(tempSet)
+                    # print(f"this is the intersection this round: {intersections}")
+        
 
 
+        finaldict = dict()
+        for docId in intersections:
+            finaldict[docId] = finalTop10[docId] #finalDict only holds intersections.
+        finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True))
+        # print(f"this is the final dict: {finaldict}")
+        
+        count = 0
+        # print("these are the top 10 results")
+        for key in finaldict:
+            if count > 10:
+                break
+            print(built_docId_dict[key])
+            count += 1
 
 
     #     # print("Here are the top 5 results: ")
@@ -155,16 +183,7 @@ if __name__ == "__main__":
     #     # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
     #     # sortedTFIDF = {}
 
-    #     time_end_2 = time.time()
-    #     print()
-    #     print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-    #     print()
-    while True:
-        query_text = input("What would you like to search for: ")
-
-        start_time = time.time()
-        search = SearchQuery(query_text, built_docId_dict) 
-        search.tokenize_query()  
-        search.create_smaller_index() 
-        end_time = time.time()
-        print(f"Finished creating search index in {(end_time - start_time)* 1000} miliseconds...")
+        time_end_2 = time.time()
+        print()
+        print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
+        print()

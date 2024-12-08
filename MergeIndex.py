@@ -51,9 +51,7 @@ class MergeIndex:
                 #documentData is each posting list --> [docID, TF, TFSCORE]
                 posting[2] = (posting[2] * IDF) # index 2 is the 1 + log(tf) value, * IDF which returns the complete tf-idf score
 
-            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:20]
-
-
+            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:50]
 
             self.index[key] = sorted_list
 
