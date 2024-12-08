@@ -56,8 +56,10 @@ class SearchQuery:
         stemmer = PorterStemmer()
 
         # tokenizes the string query text 
-        tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
+        tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]+\b')
         tokens_list = tokenizer.tokenize(self.query_text)
+        print(tokens_list)
+
         # updates and assigns the attribute self.query_tokens
         self.query_tokens = [stemmer.stem(token.lower()) for token in tokens_list]
 
@@ -95,7 +97,7 @@ class SearchQuery:
         first entry being the most relative to the
         search query.
         """
-        print(self.search_index)
+        # print(self.search_index)
 
 
 if __name__ == "__main__":
