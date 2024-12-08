@@ -53,8 +53,6 @@ class MergeIndex:
 
             sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:20]
 
-
-
             self.index[key] = sorted_list
 
     def _create_category_index(self, sorted_data):
