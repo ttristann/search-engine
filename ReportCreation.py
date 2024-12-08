@@ -60,6 +60,7 @@ def report_creation(main_directory):
         report.write("----------------------------------------\n")
         report.write(f"Total File Size: {total_file_sizeMB:.2f} KB")
 
-if __name__ == "__main__":
-    dir_path = "."
-    report_creation(dir_path)
+# if __name__ == "__main__":
+#     dir_path = "."
+#     report_creation(dir_path)
+

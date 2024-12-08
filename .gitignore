@@ -7,11 +7,14 @@ __pycache__/
 ANALYST/
 DEV/
 .idea/
+IndexCategory/
 
 # Ignore batch output files
 Output_batch_*.txt
 Output_batch_*.json
 smaller_index.txt
 docID_to_URL.json
+merged_index.json
 
 .DS_Store
+scratch.py
