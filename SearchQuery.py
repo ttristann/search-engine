@@ -118,7 +118,7 @@ class SearchQuery:
         
         with open("bookkeeper.json", "w") as f:
             json.dump(self.bookkeeper, f, indent=4)
-        
+    
     def parse_json(self, file):
         """
         Parses the json file from the current position
@@ -165,42 +165,37 @@ class SearchQuery:
         finalTop10 = {}
         intersections = set()
         loadedFiles = defaultdict(lambda: defaultdict(list))
-        bookkeeper = self.get_bookkeeper()
+        # bookkeeper = self.get_bookkeeper()
+        # print(self.bookkeeper)
 
-        # Group tokens by their first character to minimize file I/O
-        tokens_by_first_char = defaultdict(list)
+        # Group tokens by their starting character
+        category_tokens = defaultdict(list)
         for token in self.query_tokens:
-            tokens_by_first_char[token[0]].append(token)
+            category_tokens[token[0]].append(token)
 
         # Process each group
-        for first_char, tokens in tokens_by_first_char.items():
-            file = f"IndexCategory/{first_char}.json"
-
+        for char, tokens in category_tokens.items():
+            file = f"IndexCategory/{char}.json"
             try:
                 with open(file, "r", encoding="utf-8") as f:
                     for token in tokens:
-                        # Verify that the token exists in the bookkeeper for this file
-                        if token not in bookkeeper.get(f"{first_char}.json", {}):
-                            print(f"Token '{token}' not found in bookkeeper for file '{first_char}.json'.")
+                        # Check if token exists in the bookkeeper
+                        if token not in self.bookkeeper.get(f"{char}.json", {}):
+                            print(f"Sorry '{token}' does not seem to exist in the index. Continuing...")
                             continue
-
-                        try:
-                            offset = bookkeeper[first_char + ".json"][token]
-                            f.seek(offset)  # Seek to the token offset
-                            postings_json = self.parse_json(f)
-                            postings = json.loads(postings_json)
-                            loadedFiles[first_char][token].extend(postings)
-                        except json.JSONDecodeError as e:
-                            print(f"JSON decoding failed for token '{token}' in file '{first_char}.json': {e}")
-                            continue
-                        except Exception as e:
-                            print(f"Error processing token '{token}' in file '{first_char}.json': {e}")
-                            continue
+                        
+                        # Use the token's offset found in bookkeeper to retrieve the postings
+                        offset = self.bookkeeper[char + ".json"][token]
+                        f.seek(offset)  # Seek to the token offset
+                        postings_json = self.parse_json(f)
+                        postings = json.loads(postings_json)
+                        loadedFiles[char][token].extend(postings)
+    
             except FileNotFoundError:
-                print(f"File '{first_char}.json' not found in 'IndexCategory'.")
+                print(f"File '{char}.json' not found in 'IndexCategory'.")
                 continue
             except Exception as e:
-                print(f"An unexpected error occurred while opening '{first_char}.json': {e}")
+                print(f"An unexpected error occurred while opening '{char}.json': {e}")
                 continue
 
         # Compute finalTop10 and intersections
@@ -261,6 +256,9 @@ class SearchQuery:
         with open("bookkeeper.json", "r") as f:
             bookkeeper = json.load(f)
         return bookkeeper
+    
+    def set_bookkeeper(self, bookkeeper):
+        self.bookkeeper = bookkeeper
       
 if __name__ == "__main__":
     mac_path = 'DEV'
@@ -286,9 +284,8 @@ if __name__ == "__main__":
     time_end = time.time()
     print(f"Retrieved Index in: {time_end - time_start} seconds...")
     
-    # search2 = SearchQuery("covid", docId_dict)
-    # search2.build_bookkeeper()
-
+    search2 = SearchQuery("covid", docId_dict)
+    bk = search2.get_bookkeeper()
     ###############################################################################
     
     # Search Query Processing
@@ -297,6 +294,7 @@ if __name__ == "__main__":
         time_start_2 = time.time()
         
         search = SearchQuery(query_text, docId_dict) # initializes SearchQuery object
+        search.set_bookkeeper(bk) # sets the bookkeeper dictionary for the search query
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
         # bookkeeper = search.get_bookkeeper() # retrieves the bookkeeper dictionary
         # for key in bookkeeper.keys():
