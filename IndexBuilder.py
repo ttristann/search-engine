@@ -269,8 +269,8 @@ class IndexBuilder:
         print("\n\n-----------------------------------------------------")
         print("Starting merging process...")
         print("-----------------------------------------------------")
-        merger = MergeIndex()
-        merger.merge_index("IndexContent/") # merge all the partial indexes into one main index
+        # merger = MergeIndex()
+        # merger.merge_index("IndexContent/") # merge all the partial indexes into one main index
         
 
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary

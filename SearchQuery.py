@@ -91,20 +91,20 @@ if __name__ == "__main__":
 
     time_start = time.time()
     
-    # # instantiates an IndexBuilder object and creates the inverted index
-    # indexBuilder = IndexBuilder(mac_path)
-    # indexBuilder.build_index()
-    # # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    # instantiates an IndexBuilder object and creates the inverted index
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
+    # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
     time_end = time.time()
 
-    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...\n\n")
 
     with open("IndexContent/docID_to_URL.json", "r") as f:
         built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
 
     while True:
-        query_text = input("What would you like to search for: ")
+        query_text = input("What would you like to search for?: ")
         time_start_2 = time.time()
 
         search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
@@ -112,6 +112,8 @@ if __name__ == "__main__":
         finalTop10 = dict()
         intersections = set()
         loadedFiles = dict()
+        
+        print(f"\nHere are the results:\n")
 
         for token in search.get_query_tokens():
             if token[0] not in loadedFiles: #file has not been loaded, we need to load it
@@ -120,7 +122,7 @@ if __name__ == "__main__":
                     loadedFiles[token[0]] = json.load(f) #we now have access to the folder
             
             if token not in loadedFiles[token[0]]:
-                print("no query exists")
+                print("No there are no documents that have your query.\nPlease try another query. ")
             else:
                 tempSet = set() # this set will be intersected by master set
                 for posting in loadedFiles[token[0]][token]:
@@ -132,8 +134,6 @@ if __name__ == "__main__":
                     intersections = tempSet
                 else:
                     intersections = intersections.intersection(tempSet)
-        
-
 
         finaldict = dict()
         for docId in intersections:
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         for key in finaldict: #first exhaust links for intersection 
             if count > 10:
                 break
-            print(built_docId_dict[key])
+            print(f'\t{built_docId_dict[key]}')
             count += 1
         for key in finalTop10: # now fill the remainding 10 with top sorted tf-idf scores, ensure no repeats with set values
             if count > 10:
@@ -153,9 +153,9 @@ if __name__ == "__main__":
             if key in finaldict: # if key is in the final dict, then we already showed it.
                 continue
             else:
-                print(built_docId_dict[key])
+                print(f'\t{built_docId_dict[key]}')
                 count += 1
 
         time_end_2 = time.time()
-        print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")
-        print("\n\n")
+        print(f"\nFinished Query Search process in: {(time_end_2 - time_start_2) * 1000} milliseconds...")
+        print("\n")
