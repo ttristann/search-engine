@@ -4,6 +4,11 @@ import os, json
 import time
 
 
+from nltk.stem import PorterStemmer
+from nltk.tokenize import RegexpTokenizer
+
+
+
 """
 This class that analyzes through the newly created
 partial index inside the Output_Batch text files 
@@ -117,7 +122,7 @@ class QueryIndex:
 if __name__ == "__main__":
     query_tokens = ["tuesday", "yesterday", "today"]
     tokens = ["mach", "learn"]
-    q = ["crista", "lope"]
+    q = ["acm"]
     words = [
     'Apple',      # A
     'Ball',       # B
@@ -146,6 +151,14 @@ if __name__ == "__main__":
     'Yacht',      # Y
     'Zebra'       # Z
 ]
+    
+    # query_text = "master of software engineering"
+    # stemmer = PorterStemmer()
+    # # tokenizes the string query text 
+    # tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
+    # tokens_list = tokenizer.tokenize(query_text)
+    # # updates and assigns the attribute self.query_tokens
+    # main_tokens = [stemmer.stem(token.lower()) for token in tokens_list]
     # lst = [word.lower() for word in words]
     small_index = QueryIndex(q)
     time_start= time.time() # start the timer for creating report

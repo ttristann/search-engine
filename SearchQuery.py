@@ -81,161 +81,90 @@ class SearchQuery:
         # creates an smaller index
         query_index.build_query_index()
         # assigns/updates attribute to be used in another function
-        self.search_index = query_index.get_query_index()
+        # self.search_index = query_index.get_query_index()
 
-    def match_search_query(self, docId_dict, docId_built=False): 
-        """
-        Matches the search query tokens with the tokens
-        inside the smaller index to get the top 5 results
-        or documents based on tf-idf score that is assigned
-        with each posting in the inverted index. 
-
-        TO DO: NEED A MORE EFFICIENT WAY OF MATCHING
-        """
-        ### this to make report for M2
-        smaller_index = self.get_search_index()
-        print(f"this is the smaller index: {smaller_index}")
-        # compiles all of the postings into one list
-        # postings_list = [smaller_index[key] for key, value in smaller_index.items()]
-        # postings_list = [smaller_index[key][] for key, value in smaller_index.items()]
-        postings_list = dict() # dictionary
-        sort_order = dict()
-        # this does not necessarily find the intersection between each.:(
-        # for key, value in smaller_index.items():
-        #     for key1 in value:
-        #         # print(f"this is the value being added: {key1}")
-        #         if key not in postings_list:
-        #             postings_list[key] = set()
-        #             postings_list[key].add(key1)
-        #         else:
-        #             postings_list[key].add(key1)
-
-        # print(f"this is the postings list: {postings_list}")
-        return
-
-        # this is to collect the sets of docID each token has
-        # docID_sets = [set(docID for docID, freq in posting) for posting in postings_list]
-
-        # finds the intersectiong docID
-        # common_docIDs = set.intersection(*docID_sets)
-        print(f"this is the common DOCIDS: {postings_list}")
-        # filters the postings_list to only the entries that have the common docIDs
-        filtered_lists = [
-            [(docID, freq) for docID, freq in lst if docID in common_docIDs]
-            for lst in postings_list
-        ]
-        # sorts them by freq descending
-        sorted_filtered_lists = [
-            sorted(lst, key=lambda x: x[1], reverse=True)
-            for lst in filtered_lists
-        ]
-        # iterates the sorted_filtered_list to assign the url to each docID
-        list_of_urls = list() # accumulate the urls 
-        for posting_list in sorted_filtered_lists:
-            for entry in posting_list:
-                current_docID = entry[0]
-                if docId_built == True:
-                    current_url = docId_dict.get(str(current_docID))
-                else:
-                    current_url = docId_dict.get(current_docID)
-                list_of_urls.append(current_url)
-
-        self.query_results = list_of_urls
-
-
-    def getScoreData(self):
-        pass
         
 
-
-
-
-
-    def get_top5_urls(self):
-        # prints the top 5 urls that matches to the search query
-        discovered_urls = set()
-        count = 0
-        index = 0
-        for url in self.query_results:
-            if url not in discovered_urls:
-                print(self.query_results[index])
-                discovered_urls.add(url)
-                count += 1
-            index += 1
-            if count >= 10: break
-        return discovered_urls
-
 if __name__ == "__main__":
-    mac_path = 'DEV'
-    # win_path = 'developer/DEV'
+    # mac_path = 'DEV'
+    # # win_path = 'developer/DEV'
 
-    time_start = time.time()
+    # time_start = time.time()
     
-    # instantiates an IndexBuilder object and creates the inverted index
-    # indexBuilder = IndexBuilder(mac_path)
-    # indexBuilder.build_index()
-    # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+    # # instantiates an IndexBuilder object and creates the inverted index
+    # # indexBuilder = IndexBuilder(mac_path)
+    # # indexBuilder.build_index()
+    # # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
-    time_end = time.time()
+    # time_end = time.time()
 
-    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
-    scores = Scoring()
-    built_docId_dict = {}
-    bigData = {}
+    # print(f"Finished Index creation process in: {time_end - time_start} seconds...")
+    # scores = Scoring()
+    # built_docId_dict = {}
+    # bigData = {}
 
     with open("IndexContent/docID_to_URL.json", "r") as f:
         built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
     
-    # with open("IndexContent/Output_Batch_1.json", "r") as f: #Axel wrote this, testing purposes, still need to merge
-    #     bigData = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
+    # # with open("IndexContent/Output_Batch_1.json", "r") as f: #Axel wrote this, testing purposes, still need to merge
+    # #     bigData = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
 
-    # c = 0
-    # for i,v in built_docId_dict.items():
-    #     if c == 5:
-    #         break
-    #     print(i,v)
-    #     c+=1
+    # # c = 0
+    # # for i,v in built_docId_dict.items():
+    # #     if c == 5:
+    # #         break
+    # #     print(i,v)
+    # #     c+=1
 
+    # while True:
+    #     query_text = input("What would you like to search for: ")
+    #     time_start_2 = time.time()
+
+    #     search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
+    #     search.tokenize_query()  # # stems search query words. ex: lopes --> lope
+    #     # search.create_smaller_index() # 
+    #     # search.match_search_query(built_docId_dict)
+    #     # loadedFiles = dict()
+    #     # for token in search.get_query_tokens():
+    #     #     if token[0] not in loadedFiles: #file has not been loaded, we need to load it
+    #     #         file = token[0] + ".json"
+    #     #         with open(f"IndexCategory/{file}", "r") as f:
+    #     #             loadedFiles[token[0]] = json.load(f) #we now have access to the folder
+            
+    #     #     if token not in loadedFiles[token[0]]:
+    #     #         print("no query exists")
+    #     #     else:
+    #     #         count = 0
+    #     #         print(f"these are the top 10 query terms for this word: {token}")
+    #     #         #
+    #     #         # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
+    #     #         for posting in loadedFiles[token[0]][token]:
+    #     #             if count > 10:
+    #     #                 break
+    #     #             print(built_docId_dict[str(posting[0])])
+    #     #             count += 1
+            
+
+
+
+
+    #     # print("Here are the top 5 results: ")
+    #     # search.get_top5_urls()
+    #     # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
+
+    #     # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
+    #     # sortedTFIDF = {}
+
+    #     time_end_2 = time.time()
+    #     print()
+    #     print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
+    #     print()
     while True:
         query_text = input("What would you like to search for: ")
-        time_start_2 = time.time()
 
-        search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
-        search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        # search.create_smaller_index() # 
-        # search.match_search_query(built_docId_dict)
-        loadedFiles = dict()
-        for token in search.get_query_tokens():
-            if token[0] not in loadedFiles: #file has not been loaded, we need to load it
-                file = token[0] + ".json"
-                with open(f"IndexCategory/{file}", "r") as f:
-                    loadedFiles[token[0]] = json.load(f) #we now have access to the folder
-            
-            if token not in loadedFiles[token[0]]:
-                print("no query exists")
-            else:
-                count = 0
-                print(f"these are the top 10 query terms for this word: {token}")
-                #
-                # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
-                for posting in loadedFiles[token[0]][token]:
-                    if count > 10:
-                        break
-                    print(built_docId_dict[str(posting[0])])
-                    count += 1
-            
-
-
-
-
-        # print("Here are the top 5 results: ")
-        # search.get_top5_urls()
-        # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
-
-        # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
-        # sortedTFIDF = {}
-
-        time_end_2 = time.time()
-        print()
-        print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-        print()
+        start_time = time.time()
+        search = SearchQuery(query_text, built_docId_dict) 
+        search.tokenize_query()  
+        search.create_smaller_index() 
+        end_time = time.time()
+        print(f"Finished creating search index in {(end_time - start_time)* 1000} miliseconds...")
