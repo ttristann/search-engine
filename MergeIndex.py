@@ -9,7 +9,8 @@ class MergeIndex:
 
     def merge_index(self, main_directory):
         """
-        Merges all the partial indexes from the folder containing all partial indexes (currently 'IndexContent/') into one index.
+        Merges all the partial indexes from the folder containing all partial 
+        indexes (currently 'IndexContent/') into one index.
         """
         # Load all the partial indexes
         output_batch_files = [
@@ -17,7 +18,7 @@ class MergeIndex:
             for file in os.listdir(main_directory)
             if file.startswith("Output") and file.endswith(".json")
         ]
-
+        # Updates the in-memory index entries with corresponding postings
         for file_path in output_batch_files:
             with open(file_path, "r", encoding="utf-8") as current_file:
                 content = json.load(current_file)
@@ -26,10 +27,19 @@ class MergeIndex:
 
         # Sort the postings for each term by docID
         self.index = self._quicksort(self.index)
-
+        # creates all of the json category files
         self._create_category_index(self.index)
 
     def _create_category_index(self, sorted_data):
+        """
+        Creates a directory to hold all the json files
+        that are going to be created for every category
+        based on the first letter of the token. 
+
+        Each category json file holds entries to make
+        group similar tokens in the same file allowing
+        for faster look ups. 
+        """
         category_dir = "IndexCategory"
         Path(category_dir).mkdir(parents=True, exist_ok=True)
 

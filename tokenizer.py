@@ -28,21 +28,6 @@ class Tokenizer:
         tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
         tokens_list = tokenizer.tokenize(main_text)
         return tokens_list
-    
-        # current_token = []
-        # for char in main_text:
-        #     if ('A' <= char <='Z') or ('a' <= char <= 'z') or ('0' <= char <= '9'): # checking for alphanumeric value
-        #             current_token.append(char.lower()) # normalizes it
-        #     else:
-        #         if current_token and len(current_token) >= 3:
-        #             combined = ''.join(current_token)
-        #             yield combined
-        #         current_token = [] # resets it to make a new token
-
-        # if current_token and len(current_token) >= 3: # accounts for the last token to be yielded
-        #     combined = ''.join(current_token)
-        #     yield combined
-
 
 
     def compute_frequencies(self, tokens):
