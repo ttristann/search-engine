@@ -7,6 +7,7 @@ __pycache__/
 ANALYST/
 DEV/
 .idea/
+IndexCategory/
 
 # Ignore batch output files
 Output_batch_*.txt

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from multiprocessing import Process, Manager, Pool
+from multiprocessing import Pool
 import os, json
 import heapq
 import time
@@ -111,7 +111,6 @@ class QueryIndex:
         Returns the query index to be used 
         outside of the function or class. 
         """
-
         return self.query_index
 
 if __name__ == "__main__":

@@ -15,6 +15,8 @@ from tokenizer import Tokenizer
 from pathlib import Path
 from nltk.stem import PorterStemmer
 from ReportCreation import report_creation
+from MergeIndex import MergeIndex
+
 # nltk.download('popular') # Use this to download all popular datasets for nltk, pls run once then you can comment it out
 
 
@@ -104,12 +106,14 @@ class IndexBuilder:
             important_words[title_text] = 1
         
         # retrieves the headers of the HTML content
-        for header in soub_obj.find_all(['h1', 'h2', 'h3']):
+        headers = soub_obj.find_all(['h1', 'h2', 'h3'])
+        for header in headers:
             header_text = header.get_text()
             important_words[header_text] = 0.75
         
         # retrieves the bolded text of the HTML content
-        for bold_text in soub_obj.find_all('strong'):
+        bolded_content = soub_obj.find_all('strong')
+        for bold_text in bolded_content:
             bold_text = bold_text.get_text()
             important_words[bold_text] = 0.50
         
@@ -120,7 +124,11 @@ class IndexBuilder:
          Checks if the current file should be skipped
 
          Skip Criteria:
-            - Any kind of warning raised during the parsing of the HTML content (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning, etc.)
+            - Any kind of warning raised during the parsing of the HTML content (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning)
+        
+        Returns:
+            - True if the file should be skipped, False otherwise
+            - The parsed BeautifulSoup object
 
          """
          with warnings.catch_warnings(record=True) as w: # catch the warning
@@ -130,9 +138,7 @@ class IndexBuilder:
 
             soup_obj = BeautifulSoup(html_content, "lxml")
 
-            if any(issubclass(warn.category, (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning)) for warn in w):
-                return True
-            return False
+            return any(issubclass(warn.category, (XMLParsedAsHTMLWarning, MarkupResemblesLocatorWarning)) for warn in w), soup_obj
     
     def build_index(self):
         """
@@ -180,13 +186,12 @@ class IndexBuilder:
                     # using beautiful soup to parse the content
                     html_content = data.get("content")
                     
-                    # Checks if the current file should be skipped due to an XMLParsedAsHTMLWarning - Could later update to include simhashing (?)
-                    if self.should_skip_file(html_content):
+                    # Parses the file and checks if there are any XML parsing or Markup issue - Could later update to include simhashing (?)
+                    skip, soup_obj = self.should_skip_file(html_content)
+                    
+                    if skip:
                         continue
-                    
-                    # Parse the HTML content
-                    soup_obj = BeautifulSoup(html_content, "lxml")
-                    
+
                     # Retrieves the important words from the HTML content
                     important_words = self.retrieve_important_words(soup_obj)
 
@@ -218,18 +223,15 @@ class IndexBuilder:
                         for task in tasks_per_batch:
                             partial_index, task_docId_mapping = task.get() # get the partial index from the task
                             for word, postings in partial_index.items():
-                                # print(f"this is the word: {word}, this is the postings: {postings}")
-                                # main_index[word] += postings
                                 main_index[word].extend(postings) # add the postings to the main index
 
                             docId_to_url_builder.update(task_docId_mapping) # update the docId_to_url dictionary with the current task's docId to URL mapping (should be one mapping per task)
                         batchCount += 1 # increment the batch count
                         
                         # Sort and Write the current batch to disk  
-                        main_index = self._sort_index(main_index) # (commented out for now since we changed the structure of the inverted index) 
+                        main_index = self._sort_index(main_index)
                         writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
                         
-                        # print(f"this is the main Index: {main_index}")
                         main_index = defaultdict(list) # reset the main index
                         tasks_per_batch = [] # reset the tasks list
 
@@ -237,7 +239,6 @@ class IndexBuilder:
             for task in tasks_per_batch:
                 partial_index, task_docId_mapping = task.get()
                 for word, postings in partial_index.items():
-                    # print(f"this is the word: {word}, this is the postings: {postings}")
                     main_index[word].extend(postings)
 
                 docId_to_url_builder.update(task_docId_mapping)
@@ -245,7 +246,7 @@ class IndexBuilder:
             if main_index:
                 batchCount += 1
                 # Sort and Write remaining files to disk if any (Catch the stragglers)
-                # main_index = self._sort_index(main_index)
+                main_index = self._sort_index(main_index)
                 writer_thread_queue.put((main_index, f"IndexContent/Output_Batch_{batchCount}.json"))
                 # write_to_disk(main_index, f"Output_Batch_{batchCount}.txt")
         
@@ -253,10 +254,17 @@ class IndexBuilder:
         writer_thread_queue.join()
         writer_thread_queue.put(None)
         writer_thread.join()
-        print("All files have been processed and written to disk...")
+        print("\nAll files have been processed and written to disk...")
         print(f"Total docID to URL mappings: {len(docId_to_url_builder)}")
         print("-----------------------------------------------------")
+
+        print("\n\n-----------------------------------------------------")
+        print("Starting merging process...")
+        print("-----------------------------------------------------")
+        merger = MergeIndex()
+        merger.merge_index("IndexContent/") # merge all the partial indexes into one main index
         
+
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary
 
     def get_docId_to_url(self):
