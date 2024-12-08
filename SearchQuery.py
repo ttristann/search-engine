@@ -92,8 +92,8 @@ if __name__ == "__main__":
     time_start = time.time()
     
     # instantiates an IndexBuilder object and creates the inverted index
-    indexBuilder = IndexBuilder(mac_path)
-    indexBuilder.build_index()
+    # indexBuilder = IndexBuilder(mac_path)
+    # indexBuilder.build_index()
     # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
     time_end = time.time()
