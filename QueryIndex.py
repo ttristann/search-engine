@@ -117,6 +117,7 @@ class QueryIndex:
 if __name__ == "__main__":
     query_tokens = ["tuesday", "yesterday", "today"]
     tokens = ["mach", "learn"]
+    q = ["crista", "lope"]
     words = [
     'Apple',      # A
     'Ball',       # B
@@ -145,10 +146,10 @@ if __name__ == "__main__":
     'Yacht',      # Y
     'Zebra'       # Z
 ]
-    lst = [word.lower() for word in words]
-    small_index = QueryIndex(query_tokens)
+    # lst = [word.lower() for word in words]
+    small_index = QueryIndex(tokens)
     time_start= time.time() # start the timer for creating report
     small_index.build_query_index()
     time_end= time.time() # end the timer for creating report
     # small_index.print_query_index()
-    print(f"Finished smaller index creation process in: {time_end - time_start} seconds...")
+    print(f"Finished smaller index creation process in: {(time_end - time_start) * 1000} miliseconds...")
