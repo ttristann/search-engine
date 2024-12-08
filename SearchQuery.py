@@ -97,7 +97,7 @@ class SearchQuery:
         first entry being the most relative to the
         search query.
         """
-        # print(self.search_index)
+        print(self.search_index)
 
 
 if __name__ == "__main__":
