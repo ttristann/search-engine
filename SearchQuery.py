@@ -30,7 +30,7 @@ class SearchQuery:
         self.docId_dict = docId_dict
 
         self.query_tokens = list()
-        self.search_index = defaultdict(list) # big data
+        self.search_index = defaultdict(list)
         self.query_results = list()
         self.queryResultsFrequencies = {} #{docID: {term: frequencie}}
     
@@ -39,7 +39,6 @@ class SearchQuery:
     
     def get_search_index(self):
         return self.search_index
-    
     
     def get_query_tokens(self):
         return self.query_tokens
@@ -144,38 +143,38 @@ class SearchQuery:
         self.query_results = list_of_urls
 
 
-    # def getScoreData(self, docID, termData, scores, tokens):
-    #     """  docID --> {docID: url}
-    #         termData --> {term : [docID, termFrequency, weight]}
-    #         We want to find the tf-idf scores for these terms.
-    #     """
-    #     N = len(docID) # O(1)
-    #     tfIDF_scores = dict() # key is term, value is dict--> {docID: tfIDF}. This way we can retrieve data fast
+    def getScoreData(self, docID, termData, scores, tokens):
+        """  docID --> {docID: url}
+            termData --> {term : [docID, termFrequency, weight]}
+            We want to find the tf-idf scores for these terms.
+        """
+        N = len(docID) # O(1)
+        tfIDF_scores = dict() # key is term, value is dict--> {docID: tfIDF}. This way we can retrieve data fast
         
-    #     # tokens --> 
-    #     # print(f"these are the tokens: {tokens}") # tokens --> list ["crista", "lope"]
+        # tokens --> 
+        # print(f"these are the tokens: {tokens}") # tokens --> list ["crista", "lope"]
         
-    #     for token in tokens:
-    #         if token not in termData: #if there is no key in dictionary, then no words that match it are found
-    #             continue
-    #         print(termData[token])
-    #         DF = len(termData[token]) #the number of lists for that term is the number of documents that word is in
-    #         IDF = scores.inverse_document_frequency(N, DF) # these calulations will only be done once, IDF only changes in between terms
-    #         # termScores = dict()
+        for token in tokens:
+            if token not in termData: #if there is no key in dictionary, then no words that match it are found
+                continue
+            print(termData[token])
+            DF = len(termData[token]) #the number of lists for that term is the number of documents that word is in
+            IDF = scores.inverse_document_frequency(N, DF) # these calulations will only be done once, IDF only changes in between terms
+            # termScores = dict()
 
-    #         for documentData in search.get_search_index():
-    #                 # tf-IDF -->  1 + log(TF) * log(N / DF)
-    #                 # documentData = [docID, termFrequency, weight]
-    #                 # termScores[token][documentData[0]] = scores.tf_idf(documentData[1], IDF)   #tfIDF_scores = {"cristina": {docID: tf-IDF, docID: tf-IDF}}
-    #                 if documentData[0] in tfIDF_scores:
-    #                     tfIDF_scores[documentData[0]] += (scores.tf_idf(documentData[1], IDF) + documentData[2]) #Add score instead of replacing value
-    #                 else:
-    #                     tfIDF_scores[documentData[0]] = (scores.tf_idf(documentData[1], IDF) + documentData[2]) #create dictionary pair --> term: tf-idf
-    #         # tfIDF_scores.update(termScores)
+            for documentData in termData[token]:
+                    # tf-IDF -->  1 + log(TF) * log(N / DF)
+                    # documentData = [docID, termFrequency, weight]
+                    # termScores[token][documentData[0]] = scores.tf_idf(documentData[1], IDF)   #tfIDF_scores = {"cristina": {docID: tf-IDF, docID: tf-IDF}}
+                    if documentData[0] in tfIDF_scores:
+                        tfIDF_scores[documentData[0]] += (scores.tf_idf(documentData[1], IDF) + documentData[2]) #Add score instead of replacing value
+                    else:
+                        tfIDF_scores[documentData[0]] = (scores.tf_idf(documentData[1], IDF) + documentData[2]) #create dictionary pair --> term: tf-idf
+            # tfIDF_scores.update(termScores)
 
-    #     sorted_dict = dict(sorted(tfIDF_scores.items(), key=lambda item: item[1], reverse=True))
-    #     print("\n\n")
-    #     return sorted_dict
+        sorted_dict = dict(sorted(tfIDF_scores.items(), key=lambda item: item[1], reverse=True))
+        print("\n\n")
+        return sorted_dict
 
 
 
@@ -226,33 +225,33 @@ if __name__ == "__main__":
     #     print(i,v)
     #     c+=1
 
-
     while True:
         query_text = input("What would you like to search for: ")
         time_start_2 = time.time()
 
         search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        search.create_smaller_index()
-
-        print(f"this is the big data: {search.get_search_index()}")
-
-
         # search.create_smaller_index() # 
         # search.match_search_query(built_docId_dict)
-        # loadedFiles = dict()
-        data = search.get_search_index()
-        for key in data:
-            # if token[0] not in loadedFiles: #file has not been loaded, we need to load it
-            #     file = token[0] + ".json"
-            #     with open(f"IndexCategory/{file}", "r") as f:
-            #         loadedFiles[token[0]] = json.load(f) #we now have access to the folder
-            count = 0
-            for posting in data[key]: #[docID, tf, tf-idf]
-                if count > 10:
-                    break
-                print(built_docId_dict[str(posting[0])])
-                count += 1
+        loadedFiles = dict()
+        for token in search.get_query_tokens():
+            if token[0] not in loadedFiles: #file has not been loaded, we need to load it
+                file = token[0] + ".json"
+                with open(f"IndexCategory/{file}", "r") as f:
+                    loadedFiles[token[0]] = json.load(f) #we now have access to the folder
+            
+            if token not in loadedFiles[token[0]]:
+                print("no query exists")
+            else:
+                count = 0
+                print(f"these are the top 10 query terms for this word: {token}")
+                #
+                # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
+                for posting in loadedFiles[token[0]][token]:
+                    if count > 10:
+                        break
+                    print(built_docId_dict[str(posting[0])])
+                    count += 1
             
 
 
@@ -262,8 +261,8 @@ if __name__ == "__main__":
         # search.get_top5_urls()
         # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
 
-        # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
-        # sortedTFIDF = {}
+        print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
+        sortedTFIDF = {}
 
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
