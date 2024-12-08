@@ -30,6 +30,7 @@ class IndexBuilder:
         self.filePath = filePath # path to the folder containing all the JSON files
         self.batchSize = batchSize # number of files to process before writing to disk, defaulted to 10,000 files per batch
         self.scoring = Scoring()
+        self.bookkeeper = defaultdict(dict) # dictionary to store the token offset values within the inverted index
     
     def _writer_thread_worker(self, writer_thread_queue):
         """
@@ -277,8 +278,62 @@ class IndexBuilder:
 
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary
 
+    def build_bookkeeper(self):
+        """
+        Builds the bookkeeper dictionary that holds
+        token offset values within the inverted index
+
+        Structure:
+        {
+            file_name: {
+                token: offset,
+                token2: offset2,
+            },
+            file_name2: {
+                token: offset
+            },
+            ...
+        }
+        """
+        for json_file in Path('IndexCategory').rglob('*.json'):
+            with open(json_file, "r") as f:
+                token_list = list()
+                started = False
+
+                while True:
+
+                    char = f.read(1) # reads one character at a time
+                    
+                    if not char:
+                        # end of file, move to the next file
+                        break
+                    
+                    
+
+                    if char == '"':
+                        # indicates the start/end of a token since the token is enclosed in double quotes (All other values such as docID, tf, and weight are represented as numbers)
+                        if not started:
+                            # token building process has started, we start retrieving the token's offset
+                            started = True
+                            offset = f.tell() - 1 # gets the starting offset position of the token
+                        else:
+                            # token building process has ended, we add the token and its offset to the bookkeeper dictionary
+                            started = False
+                            token = "".join(token_list) # joins the token list to form the token
+                            self.bookkeeper[json_file.name][token] = offset # update the bookkeeper to hold the token and its offset for the given file
+                            token_list.clear() # clear the token list for the next token
+                    elif started:
+                        # token building process has started, read the token one character at a time, add each character to the token list
+                        token_list.append(char)
+        
+        with open("bookkeeper.json", "w") as f:
+            json.dump(self.bookkeeper, f, indent=4)
+            
     def get_docId_to_url(self):
         return self.docId_to_url
+    
+    def get_bookkeeper(self):
+        return self.bookkeeper
     
 if __name__ == "__main__":
     folder_path = Path('developer/DEV') # path to the folder containing all the JSON files
