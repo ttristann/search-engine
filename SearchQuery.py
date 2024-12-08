@@ -41,6 +41,12 @@ class SearchQuery:
     def get_search_index(self):
         return self.search_index
 
+    def get_docId_dict(self):
+        return self.docId_dict
+    
+    def set_docId_dict(self, docId_dict):
+        self.docId_dict = docId_dict
+
     def tokenize_query(self):
         """
         Goes through the query text to analyze
@@ -184,12 +190,11 @@ class SearchQuery:
         finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True)) #only keys are intersections
         finalTop10 = dict(sorted(finalTop10.items(), key=lambda item: item[1], reverse=True)) #everything
         
-
         count = 1
         for key in finaldict: #first exhaust links for intersection 
             if count > 10:
                 break
-            print(f"\t{count}. {docId_dict[key]}\n")
+            print(f"\t{count}. {self.docId_dict[key]}\n")
             count += 1
         
         for key in finalTop10: # now fill the remainding 10 with top sorted tf-idf scores, ensure no repeats with set values
@@ -198,7 +203,7 @@ class SearchQuery:
             if key in finaldict: # if key is in the final dict, then we already showed it.
                 continue
             else:
-                print(f"\t{count}. {docId_dict[key]}\n")
+                print(f"\t{count}. {self.docId_dict[key]}\n")
                 count += 1
     
     def set_bookkeeper(self, bookkeeper):
