@@ -139,7 +139,6 @@ class IndexBuilder:
         Returns:
             - True if the file should be skipped, False otherwise
             - The parsed BeautifulSoup object
-
          """
          with warnings.catch_warnings(record=True) as w: # catch the warning
             # Filter out the warnings that are not XMLParsedAsHTMLWarning or MarkupResemblesLocatorWarning
@@ -158,8 +157,8 @@ class IndexBuilder:
 
         Curently changing content format to:
             inverted_index = {
-                'word1': [(docId : int, freq1 : int), (docId, freq2)],
-                'word2': [(docId, freq3), (docId, freq4)],
+                'word1': [(docId : int, freq1 : int, tf-idf : float), (docId, freq2, tf-idf_2)],
+                'word2': [(docId, freq3, tf-idf_3), (docId, freq4, tf-idf_4)],
                 ...
             }
         """
@@ -275,14 +274,14 @@ class IndexBuilder:
         merger = MergeIndex()
         merger.merge_index("IndexContent/") # merge all the partial indexes into one main index
         
-        
+
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary
 
     def get_docId_to_url(self):
         return self.docId_to_url
     
 if __name__ == "__main__":
-    folder_path = Path('DEV') # path to the folder containing all the JSON files
+    folder_path = Path('developer/DEV') # path to the folder containing all the JSON files
     total_files = 0 # total number of files in the directory
 
     time_start = time.time() # start the timer for index creation
