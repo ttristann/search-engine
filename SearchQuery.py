@@ -86,35 +86,22 @@ class SearchQuery:
         
 
 if __name__ == "__main__":
-    # mac_path = 'DEV'
-    # # win_path = 'developer/DEV'
+    mac_path = 'DEV'
+    # win_path = 'developer/DEV'
 
-    # time_start = time.time()
+    time_start = time.time()
     
     # # instantiates an IndexBuilder object and creates the inverted index
-    # # indexBuilder = IndexBuilder(mac_path)
-    # # indexBuilder.build_index()
+    indexBuilder = IndexBuilder(mac_path)
+    indexBuilder.build_index()
     # # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
-    # time_end = time.time()
+    time_end = time.time()
 
-    # print(f"Finished Index creation process in: {time_end - time_start} seconds...")
-    # scores = Scoring()
-    # built_docId_dict = {}
-    # bigData = {}
+    print(f"Finished Index creation process in: {time_end - time_start} seconds...")
 
     with open("IndexContent/docID_to_URL.json", "r") as f:
         built_docId_dict = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
-    
-    # # with open("IndexContent/Output_Batch_1.json", "r") as f: #Axel wrote this, testing purposes, still need to merge
-    # #     bigData = json.load(f) # loads the docId_dict from the disk if we already built it previously, saves time
-
-    # # c = 0
-    # # for i,v in built_docId_dict.items():
-    # #     if c == 5:
-    # #         break
-    # #     print(i,v)
-    # #     c+=1
 
     while True:
         query_text = input("What would you like to search for: ")
@@ -122,8 +109,6 @@ if __name__ == "__main__":
 
         search = SearchQuery(query_text, built_docId_dict) # initializes SearchQuery object
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
-        # search.create_smaller_index() # 
-        # search.match_search_query(built_docId_dict)
         finalTop10 = dict()
         intersections = set()
         loadedFiles = dict()
@@ -137,27 +122,16 @@ if __name__ == "__main__":
             if token not in loadedFiles[token[0]]:
                 print("no query exists")
             else:
-                # count = 0
-                # print(f"these are the top 10 query terms for this word: {token}\n")
-                #
-                # print(f"this is the loaded Files{loadedFiles[token[0]][token]}")
                 tempSet = set() # this set will be intersected by master set
                 for posting in loadedFiles[token[0]][token]:
-                    # if count > 10:
-                    #     break
-                    # print(built_docId_dict[str(posting[0])])
                     if str(posting[0]) not in loadedFiles:
                         finalTop10[str(posting[0])] = posting[2]
                         tempSet.add(str(posting[0]))
-                    # count += 1
 
                 if len(intersections) == 0:
                     intersections = tempSet
-                    # print(f"this is the intersection this round: {intersections}")
                 else:
-                    # print(f"Before: {tempSet}")
                     intersections = intersections.intersection(tempSet)
-                    # print(f"this is the intersection this round: {intersections}")
         
 
 
@@ -165,25 +139,13 @@ if __name__ == "__main__":
         for docId in intersections:
             finaldict[docId] = finalTop10[docId] #finalDict only holds intersections.
         finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True))
-        # print(f"this is the final dict: {finaldict}")
         
         count = 0
-        # print("these are the top 10 results")
         for key in finaldict:
             if count > 10:
                 break
             print(built_docId_dict[key])
             count += 1
 
-
-    #     # print("Here are the top 5 results: ")
-    #     # search.get_top5_urls()
-    #     # print(f"this is the len of built docID: {len(built_docId_dict)}: this is the bigData: {len(bigData)}")
-
-    #     # print(search.getScoreData(built_docId_dict, bigData, scores, search.get_query_tokens()))
-    #     # sortedTFIDF = {}
-
         time_end_2 = time.time()
-        print()
-        print(f"Finished Query Search process in: {time_end_2 - time_start_2} seconds...")
-        print()
+        print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")
