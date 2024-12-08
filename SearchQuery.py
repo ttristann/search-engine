@@ -147,14 +147,24 @@ if __name__ == "__main__":
         finaldict = dict()
         for docId in intersections:
             finaldict[docId] = finalTop10[docId] #finalDict only holds intersections.
-        finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True))
+        finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True)) #only keys are intersections
+        finalTop10 = dict(sorted(finalTop10.items(), key=lambda item: item[1], reverse=True)) #everything 
         
         count = 0
-        for key in finaldict:
+        for key in finaldict: #first exhaust links for intersection 
             if count > 10:
                 break
-            print(docId_dict[key])
+            print(built_docId_dict[key])
             count += 1
+        for key in finalTop10: # now fill the remainding 10 with top sorted tf-idf scores, ensure no repeats with set values
+            if count > 10:
+                break
+            if key in finaldict: # if key is in the final dict, then we already showed it.
+                continue
+            else:
+                print(built_docId_dict[key])
+                count += 1
 
         time_end_2 = time.time()
         print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")
+        print("\n\n")
