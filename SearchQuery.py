@@ -54,6 +54,7 @@ class SearchQuery:
         """
         # initializes the stemmer
         stemmer = PorterStemmer()
+
         # tokenizes the string query text 
         tokenizer = RegexpTokenizer(r'\b[a-zA-Z0-9]{3,}\b')
         tokens_list = tokenizer.tokenize(self.query_text)
@@ -74,13 +75,13 @@ class SearchQuery:
         QueryIndex.py to create a smaller index that
         only contains the tokens from the search query. 
         """
-        # query_tokens = self.get_query_tokens()
+        query_tokens = self.get_query_tokens()
         # instantiates an QueryIndex object 
-        query_index = QueryIndex(self.query_tokens)
+        query_index = QueryIndex(query_tokens)
         # creates an smaller index
         query_index.build_query_index()
         # assigns/updates attribute to be used in another function
-        self.search_index = query_index.query_index
+        self.search_index = query_index.get_query_index()
 
     def match_search_query(self, docId_dict, docId_built=False): 
         """
@@ -204,7 +205,7 @@ if __name__ == "__main__":
     # indexBuilder.build_index()
     # docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
     
-    # time_end = time.time()
+    time_end = time.time()
 
     print(f"Finished Index creation process in: {time_end - time_start} seconds...")
     scores = Scoring()
