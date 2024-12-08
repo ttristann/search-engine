@@ -22,7 +22,7 @@ class Scoring:
 
     def tf_idf(self, tf, IDF): # afterward creating index
         # 1 + log(TF) * log(N / DF)
-        return self.term_frequency(tf) * IDF
+        return self.term_frequency(tf) * IDF #this is assuming 
     
 
     # REMEMBER TENZIN: {term: [DOCID, termFrequncy, weight]}

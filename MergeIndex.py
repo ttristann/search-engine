@@ -2,10 +2,12 @@ from collections import defaultdict
 from pathlib import Path
 import json, os
 import time
+from Scoring import Scoring
 
 class MergeIndex:
     def __init__(self):
         self.index = defaultdict(list)
+        self.score = Scoring()
 
     def merge_index(self, main_directory):
         """
@@ -27,10 +29,35 @@ class MergeIndex:
 
         # Sort the postings for each term by docID
         self.index = self._quicksort(self.index)
+        self.getScoreData()
         # creates all of the json category files
         self._create_category_index()
 
         self.index = dict() # Clear the index to free up memory
+
+    def getScoreData(self):
+        """  docID --> {docID: url}
+            termData --> {term : [docID, termFrequency, weight]}
+            We want to find the tf-idf scores for these terms.
+        """
+        N = len(self.index) # O(1), this is big data number of pairs
+
+
+        for key in self.index: #complete data
+            DF = len(self.index[key]) #len of that query postings, better place to place?????
+            IDF = self.score.inverse_document_frequency(N, DF)
+
+            for posting in self.index[key]:
+                # print(f"this is the data: {self.index[key]}")
+                # # tf-IDF -->  1 + log(TF) * log(N / DF)
+                #documentData is each posting list --> [docID, TF, TFSCORE]
+                posting[2] = (posting[2] * IDF) # index 2 is the 1 + log(tf) value, * IDF which returns the complete tf-idf score
+
+            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:20]
+
+
+
+            self.index[key] = sorted_list
 
     def _create_category_index(self):
         """
@@ -90,7 +117,7 @@ if __name__ == "__main__":
     start = time.time()
 
     merge_index = MergeIndex()
-    merge_index.merge_index("IndexContent/")
+    merge_index.merge_index()
 
 
     end = time.time()
