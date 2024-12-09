@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, jsonify
 from SearchQuery import SearchQuery  # Import your existing class
 import time
 import json
+import os
 
 app = Flask(__name__)
 
@@ -71,7 +72,7 @@ def search_query():
             count += 1
     search_query_end = time.time()
 
-    query_retrieval_time = f"{((search_query_end - search_query_start) * 1000):.2f}"
+    query_retrieval_time = f"{((search_query_end - search_query_start) * 1000):.5f}"
 
     print(f"search query processed in {query_retrieval_time} milliseconds...")
     print("Rendering search results...")
@@ -80,14 +81,17 @@ def search_query():
     return render_template('search_results.html', search_results=search_results, query=query_text, time_elapsed=query_retrieval_time)
 
 if __name__ == '__main__':
-    win_path = 'developer/DEV'
-    mac_path = 'DEV'
+    
+    path = 'DEV'
+    if os.name == 'nt':
+        # if it is a windows machine, we need to change the path accordingly
+        path = 'developer/DEV'
 
     # Loading in the index data, dociId to URL converter, and bookkeeper into memory
     print("\n--------------------------")
     print("loading data...")
     data_retrieveal_start = time.time()
-    docId_dict, bk = load_data(win_path)
+    docId_dict, bk = load_data(path)
     data_retrieval_end = time.time()
     print(f"data loaded in {(data_retrieval_end - data_retrieveal_start) * 1000} milliseconds...")
     print("--------------------------")
