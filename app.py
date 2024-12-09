@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template, jsonify
 from SearchQuery import SearchQuery  # Import your existing class
+from IndexBuilder import IndexBuilder
 import time
 import json
 import os
@@ -19,7 +20,12 @@ def load_data(path):
         print("Index not found. Creating Index...")
 
         # instantiates an IndexBuilder object and creates the inverted index
-        docId_dict, bk = SearchQuery.initializeSearchData(path)
+        indexBuilder = IndexBuilder(path)
+        indexBuilder.build_index()
+        indexBuilder.build_bookkeeper()
+
+        docId_dict = indexBuilder.get_docId_to_url()
+        bk = indexBuilder.get_bookkeeper()
 
     return docId_dict, bk
 
@@ -86,6 +92,7 @@ if __name__ == '__main__':
     if os.name == 'nt':
         # if it is a windows machine, we need to change the path accordingly
         path = 'developer/DEV'
+        # path = 'analyst/ANALYST'
 
     # Loading in the index data, dociId to URL converter, and bookkeeper into memory
     print("\n--------------------------")
