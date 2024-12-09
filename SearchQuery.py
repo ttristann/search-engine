@@ -189,7 +189,10 @@ class SearchQuery:
             finaldict[docId] = finalTop10[docId] #finalDict only holds intersections.
         finaldict = dict(sorted(finaldict.items(), key=lambda item: item[1], reverse=True)) #only keys are intersections
         finalTop10 = dict(sorted(finalTop10.items(), key=lambda item: item[1], reverse=True)) #everything
-        
+
+        return finaldict, finalTop10
+    
+    def print_search_results(self, finalTop10, finaldict):
         count = 1
         for key in finaldict: #first exhaust links for intersection 
             if count > 10:
@@ -208,6 +211,16 @@ class SearchQuery:
     
     def set_bookkeeper(self, bookkeeper):
         self.bookkeeper = bookkeeper
+    
+    def initializeSearchData(self, path):
+        indexBuilder = IndexBuilder(path)
+        indexBuilder.build_index()
+        indexBuilder.build_bookkeeper()
+        
+        docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
+        bk = indexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
+
+        return docId_dict, bk
       
 if __name__ == "__main__":
     mac_path = 'DEV'
@@ -248,8 +261,9 @@ if __name__ == "__main__":
         search.tokenize_query()  # # stems search query words. ex: lopes --> lope
 
         finalTop10, intersections = search.create_search_index() # creates a smaller index for the search query
-        search.retrieve_search_results(finalTop10, intersections) # retrieves the search results
+        finaldict, finalTop10 = search.retrieve_search_results(finalTop10, intersections) # retrieves the search results
+        search.print_search_results(finalTop10, finaldict) # prints the search results
 
-        time_end_2 = time.time()
+        time_end_2 = time.time() 
         print(f"Finished Query Search process in: {(time_end_2 - time_start_2) * 1000} miliseconds...")
         print("\n\n")
