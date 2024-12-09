@@ -89,6 +89,12 @@ class QueryIndex:
         num_processes = 4
 
         # splits the tokens into chunks for multiprocessing
+        self.query_tokens = list(set(self.query_tokens))
+        print("Query:", self.query_tokens)
+        if (len(self.query_tokens) == 0):
+            print("Please enter a prompt to search for.")
+            return
+
         chunk_size = (len(self.query_tokens) + num_processes - 1) // num_processes
         token_chunks = [self.query_tokens[i:i + chunk_size] for i in range(0, len(self.query_tokens), chunk_size)]
 

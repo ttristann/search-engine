@@ -15,6 +15,7 @@ Output_batch_*.json
 smaller_index.txt
 docID_to_URL.json
 merged_index.json
+*.json
 
 .DS_Store
 scratch.py
