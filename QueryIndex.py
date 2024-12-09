@@ -10,6 +10,8 @@ from nltk.tokenize import RegexpTokenizer
 
 
 """
+                 DEPRICATED
+
 This class that analyzes through the newly created
 partial index inside the Output_Batch text files 
 inside the same directory to create a smaller index

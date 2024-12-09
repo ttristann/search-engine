@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Search Results</title>
-</head>
-<body>
+    <link rel="stylesheet" href="../static/style.css" />
+  </head>
+  <body>
     <h1>Search Results for {{query_text}}</h1>
+    <p>Found results in {{time_elapsed}}ms</p>
     {% if search_results %}
-        <ul>
-        {% for result in search_results %}
-            <li><a href="{{ result }}">{{ result }}</a></li>
-        {% endfor %}
-        </ul>
+    <ul>
+      {% for result in search_results %}
+      <li><a href="{{ result }}">{{ result }}</a></li>
+      {% endfor %}
+    </ul>
     {% else %}
-        <p>No results found.</p>
+    <p>No results found.</p>
     {% endif %}
     <a href="/">Back to Search</a>
-</body>
+  </body>
 </html>

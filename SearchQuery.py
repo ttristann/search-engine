@@ -247,13 +247,14 @@ if __name__ == "__main__":
         bk = indexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
     
     time_end = time.time()
-    print(f"Retrieved Index in: {time_end - time_start} seconds...")
+    print(f"Retrieved Index in: {time_end - time_start} seconds...\n")
     
     ###############################################################################
     
     # Search Query Processing
     while True:
         query_text = input("What would you like to search for: ")
+        print("\n")
         time_start_2 = time.time()
         
         search = SearchQuery(query_text, docId_dict) # initializes SearchQuery object

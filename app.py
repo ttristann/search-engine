@@ -70,11 +70,14 @@ def search_query():
             search_results.append(url)
             count += 1
     search_query_end = time.time()
-    print(f"search query processed in {(search_query_end - search_query_start) * 1000} milliseconds...")
+
+    query_retrieval_time = f"{((search_query_end - search_query_start) * 1000):.2f}"
+
+    print(f"search query processed in {query_retrieval_time} milliseconds...")
     print("Rendering search results...")
     print("--------------------------")
 
-    return render_template('search_results.html', search_results=search_results, query=query_text)
+    return render_template('search_results.html', search_results=search_results, query=query_text, time_elapsed=query_retrieval_time)
 
 if __name__ == '__main__':
     win_path = 'developer/DEV'

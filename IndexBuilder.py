@@ -1,3 +1,4 @@
+
 import os
 import json
 import re
@@ -277,6 +278,7 @@ class IndexBuilder:
         print("-----------------------------------------------------\n\n")
 
         self.docId_to_url = docId_to_url_builder # update the docId_to_url attribute with the final dictionary
+        self.build_bookkeeper()
 
     def build_bookkeeper(self):
         """
@@ -332,6 +334,7 @@ class IndexBuilder:
     
     def get_bookkeeper(self):
         return self.bookkeeper
+             
     
 if __name__ == "__main__":
     folder_path = Path('developer/DEV') # path to the folder containing all the JSON files
