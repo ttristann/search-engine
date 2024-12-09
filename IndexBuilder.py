@@ -81,7 +81,7 @@ class IndexBuilder:
 
         # updates the docID_dict to add the entry docId: url
         temp_docId_to_url = dict()
-        temp_docId_to_url[docId] = url
+        temp_docId_to_url[str(docId)] = url
 
         # creates the posting for the inverted index entries 
         # for the words present in the current file
@@ -324,7 +324,7 @@ class IndexBuilder:
                         # token building process has started, read the token one character at a time, add each character to the token list
                         token_list.append(char)
     
-        with open("IndexContent/bookkeeper.json", "w") as f:
+        with open("IndexCategory/bookkeeper.json", "w") as f:
             json.dump(self.bookkeeper, f, indent=4)
             
     def get_docId_to_url(self):

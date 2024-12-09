@@ -229,6 +229,7 @@ if __name__ == "__main__":
         indexBuilder = IndexBuilder(win_path)
         indexBuilder.build_index()
         indexBuilder.build_bookkeeper()
+        
         docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
         bk = indexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
     
