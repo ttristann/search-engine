@@ -177,7 +177,8 @@ class IndexBuilder:
         # Creating a single writer thread to write to disk
         writer_thread = threading.Thread(target=self._writer_thread_worker, args=(writer_thread_queue,), daemon=True)
         writer_thread.start()
-        ### MULTIPROCESSING IMPLEMENTATION ???? ###
+
+        ### MULTIPROCESSING IMPLEMENTATION ###
         # 1. Create a multiprocessing pool to manage the processes (instead of manually handling them)
         # 2. Initialize task list, should contain all the files to process, resets every batchSize
         # 3. Create a process for each file in the task list

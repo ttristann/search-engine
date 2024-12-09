@@ -24,59 +24,18 @@ class MergeIndex:
             for file in os.listdir(main_directory)
             if file.startswith("Output") and file.endswith(".json")
         ]
-
-        # Cache category files in memory
-        category_cache = defaultdict(dict)
-        for category_file in os.listdir(category_dir):
-            category_name, ext = os.path.splitext(category_file)
-            if ext == ".json":
-                with open(os.path.join(category_dir, category_file), "r", encoding="utf-8") as f:
-                    category_cache[category_name] = json.load(f)
-
-
-        for batch_file in output_batch_files:
-            with open(batch_file, "r", encoding="utf-8") as current_file:
+        # Updates the in-memory index entries with corresponding postings
+        for file_path in output_batch_files:
+            with open(file_path, "r", encoding="utf-8") as current_file:
                 content = json.load(current_file)
-                for token, posting_list in content.items():
-                    category_name = token[0].lower()
+                for term, posting_list in content.items():
+                    self.index[term].extend(posting_list)
 
-                    # Merge postings
-                    existing_postings = category_cache[category_name].get(token, [])
-                    merged_postings = existing_postings + posting_list
-
-                    # Update TF-IDF scores
-                    DF = df_dict.get(token, 1)  # Default DF to 1 if not found
-                    N = 54460  # Replace with dynamic value if possible
-                    IDF = self.score.inverse_document_frequency(N, DF)
-                    for posting in merged_postings:
-                        posting[2] *= IDF
-
-                    # Keep only the top 50 postings sorted by score
-                    category_cache[category_name][token] = sorted(
-                        merged_postings, key=lambda x: x[2], reverse=True
-                    )[:50]
-
-        # Write updated category data back to files
-        for category_name, data in category_cache.items():
-            file_path = os.path.join(category_dir, f"{category_name}.json")
-            with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-
-
-    def calculate_df(self):
-        main_directory = "IndexContent/"
-        output_batch_files = [os.path.join(main_directory, file) for 
-                            file in os.listdir(main_directory) 
-                            if file.startswith("Output") and file.endswith(".json")]
-            
-        df_dict = defaultdict(int)
-        for batch_file in output_batch_files:
-            with open(batch_file, "r", encoding="utf-8") as current_file:
-                content = json.load(current_file)
-                for token, posting_list in content.items():
-                    df_dict[token] += len(posting_list)
-
-        return df_dict
+        # Sort the postings for each term by docID
+        self.index = self._quicksort(self.index)
+        self.getScoreData()
+        # creates all of the json category files
+        self._create_category_index(self.index)
 
     def getScoreData(self):
         """  docID --> {docID: url}
@@ -91,16 +50,14 @@ class MergeIndex:
             IDF = self.score.inverse_document_frequency(N, DF)
 
             for posting in self.index[key]:
-                # print(f"this is the data: {self.index[key]}")
                 # # tf-IDF -->  1 + log(TF) * log(N / DF)
                 #documentData is each posting list --> [docID, TF, TFSCORE]
                 posting[2] = (posting[2] * IDF) # index 2 is the 1 + log(tf) value, * IDF which returns the complete tf-idf score
-
-            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)[:50]
-
+                
+            sorted_list = sorted(self.index[key], key=lambda x: x[2], reverse=True)
             self.index[key] = sorted_list
 
-    def _create_category_index(self):
+    def _create_category_index(self, sorted_data):
         """
         Creates a directory to hold all the json files
         that are going to be created for every category
@@ -116,7 +73,7 @@ class MergeIndex:
         # Create a dictionary to hold data for each category
         category_data = {}
 
-        for token, postings in self.index.items():
+        for token, postings in sorted_data.items():
             category_name = token[0].lower()
             if category_name not in category_data:
                 category_data[category_name] = {}
