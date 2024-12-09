@@ -239,7 +239,7 @@ if __name__ == "__main__":
     except FileNotFoundError:
         print("Index not found. Creating Index...")
         # instantiates an IndexBuilder object and creates the inverted index
-        indexBuilder = IndexBuilder(win_path)
+        indexBuilder = IndexBuilder(mac_path)
         indexBuilder.build_index()
         indexBuilder.build_bookkeeper()
         
