@@ -211,16 +211,6 @@ class SearchQuery:
     
     def set_bookkeeper(self, bookkeeper):
         self.bookkeeper = bookkeeper
-    
-    def initializeSearchData(self, path):
-        indexBuilder = IndexBuilder(path)
-        indexBuilder.build_index()
-        indexBuilder.build_bookkeeper()
-        
-        docId_dict = indexBuilder.get_docId_to_url() # retrieves the docId_dict to be used in for searching
-        bk = indexBuilder.get_bookkeeper() # retrieves the bookkeeper dictionary
-
-        return docId_dict, bk
       
 if __name__ == "__main__":
     mac_path = 'DEV'
